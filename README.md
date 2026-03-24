@@ -10,6 +10,35 @@ Script Bash para limpeza e manutenção do **Big Linux** (e outros sistemas base
 - **Limpa revisões desabilitadas do Snap** e o cache do daemon.
 - **Atualiza o menu e o cache do KDE Plasma** (`kbuildsycoca`, `krunner`, `plasmashell`) para refletir as mudanças imediatamente.
 
+## Interface Gráfica (GUI)
+
+Uma interface gráfica está disponível para uso interativo, construída com [BigBashView](https://github.com/biglinux/bigbashview).
+
+![BigLinux Cleaner GUI — dark theme KDE Plasma](assets/screenshot.svg)
+
+### Pré-requisito
+
+O BigBashView deve estar instalado (já incluso no BigLinux):
+
+```bash
+# BigLinux / Arch
+sudo pacman -S bigbashview
+```
+
+### Lançar a GUI
+
+```bash
+git clone https://github.com/zonaro/BigLinuxCleaner.git
+cd BigLinuxCleaner
+bash launch.sh
+```
+
+A janela mostra cada etapa da limpeza em tempo real com cores por nível de log. O processo de limpeza roda em segundo plano e a interface atualiza automaticamente a cada 500 ms.
+
+> A GUI solicita a senha de `sudo` via dialog gráfico nativo do KDE (ksshaskpass) quando necessário.
+
+---
+
 ## Uso rápido (curl)
 
 Execute o script diretamente no terminal sem precisar clonar o repositório:

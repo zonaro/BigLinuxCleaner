@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="700" viewBox="0 0 920 700">
+  <!-- Background window -->
+  <rect width="920" height="700" rx="12" fill="#1e1e2e"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="920" height="44" rx="12" fill="#181825"/>
+  <rect x="0" y="22" width="920" height="22" fill="#181825"/>
+
+  <!-- Title bar buttons -->
+  <circle cx="20" cy="22" r="7" fill="#f38ba8"/>
+  <circle cx="44" cy="22" r="7" fill="#f9e2af"/>
+  <circle cx="68" cy="22" r="7" fill="#a6e3a1"/>
+
+  <!-- Title text -->
+  <text x="460" y="28" font-family="system-ui, sans-serif" font-size="14" fill="#cdd6f4" text-anchor="middle" dominant-baseline="middle">BigLinux Cleaner</text>
+
+  <!-- Header area -->
+  <rect x="24" y="60" width="872" height="90" rx="10" fill="#181825"/>
+  <!-- Header icon circle -->
+  <circle cx="72" cy="105" r="26" fill="#313244"/>
+  <!-- Broom icon (simplified) -->
+  <text x="72" y="112" font-family="system-ui, sans-serif" font-size="26" fill="#cba6f7" text-anchor="middle">🧹</text>
+  <!-- Header text -->
+  <text x="112" y="95" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#cdd6f4">BigLinux Cleaner</text>
+  <text x="112" y="118" font-family="system-ui, sans-serif" font-size="13" fill="#6c7086">Remove pacotes órfãos, atalhos quebrados e cache do sistema</text>
+
+  <!-- Start button -->
+  <rect x="730" y="81" width="150" height="46" rx="8" fill="#cba6f7"/>
+  <text x="805" y="104" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#1e1e2e" text-anchor="middle" dominant-baseline="middle">▶  Iniciar Limpeza</text>
+
+  <!-- Log area background -->
+  <rect x="24" y="166" width="872" height="488" rx="10" fill="#11111b"/>
+
+  <!-- Log area label -->
+  <text x="40" y="192" font-family="monospace, monospace" font-size="12" fill="#585b70">Saída do processo de limpeza</text>
+
+  <!-- Log lines -->
+  <!-- line-info -->
+  <rect x="32" y="202" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="218" font-family="monospace, monospace" font-size="12" fill="#89b4fa">[INFO] Iniciando limpeza do sistema BigLinux...</text>
+
+  <!-- line-ok -->
+  <rect x="32" y="228" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="244" font-family="monospace, monospace" font-size="12" fill="#a6e3a1">[OK]   Pacotes órfãos analisados: 4 encontrados para remoção</text>
+
+  <!-- line-info -->
+  <rect x="32" y="254" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="270" font-family="monospace, monospace" font-size="12" fill="#89b4fa">[INFO] Verificando atalhos quebrados (.desktop) no menu...</text>
+
+  <!-- line-warn -->
+  <rect x="32" y="280" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="296" font-family="monospace, monospace" font-size="12" fill="#f9e2af">[WARN] 2 atalhos de Flatpak desinstalados encontrados</text>
+
+  <!-- line-ok -->
+  <rect x="32" y="306" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="322" font-family="monospace, monospace" font-size="12" fill="#a6e3a1">[OK]   Atalhos removidos: com.spotify.Client.desktop</text>
+
+  <!-- line-ok -->
+  <rect x="32" y="332" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="348" font-family="monospace, monospace" font-size="12" fill="#a6e3a1">[OK]   Cache Flatpak limpo — 1.2 GB liberados</text>
+
+  <!-- line-info -->
+  <rect x="32" y="358" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="374" font-family="monospace, monospace" font-size="12" fill="#89b4fa">[INFO] Atualizando cache do KDE Plasma (kbuildsycoca6)...</text>
+
+  <!-- line-ok -->
+  <rect x="32" y="384" width="856" height="22" rx="3" fill="#1e1e2e"/>
+  <text x="44" y="400" font-family="monospace, monospace" font-size="12" fill="#a6e3a1">[OK]   Menu e Krunner atualizados com sucesso</text>
+
+  <!-- separator -->
+  <rect x="32" y="412" width="856" height="1" fill="#313244"/>
+
+  <!-- Summary lines -->
+  <text x="44" y="432" font-family="monospace, monospace" font-size="12" fill="#a6e3a1">════════════════════════════════════════</text>
+  <text x="44" y="454" font-family="monospace, monospace" font-size="13" font-weight="bold" fill="#cba6f7">  Resumo da Limpeza:</text>
+  <text x="44" y="476" font-family="monospace, monospace" font-size="12" fill="#cdd6f4">  • Pacotes órfãos removidos : 4</text>
+  <text x="44" y="498" font-family="monospace, monospace" font-size="12" fill="#cdd6f4">  • Atalhos quebrados removidos: 2</text>
+  <text x="44" y="520" font-family="monospace, monospace" font-size="12" fill="#cdd6f4">  • Espaço liberado (cache)    : 1.2 GB</text>
+  <text x="44" y="542" font-family="monospace, monospace" font-size="12" fill="#a6e3a1">════════════════════════════════════════</text>
+
+  <!-- Cursor blink -->
+  <rect x="44" y="556" width="8" height="16" fill="#cba6f7" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;0;0.8" dur="1.2s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Status bar at bottom -->
+  <rect x="24" y="664" width="872" height="22" rx="6" fill="#181825"/>
+  <circle cx="42" cy="675" r="6" fill="#a6e3a1"/>
+  <text x="56" y="680" font-family="system-ui, sans-serif" font-size="11" fill="#a6e3a1" dominant-baseline="middle">Limpeza concluída com sucesso</text>
+  <text x="870" y="680" font-family="system-ui, sans-serif" font-size="11" fill="#585b70" text-anchor="end" dominant-baseline="middle">BigBashView · BigLinux</text>
+</svg>
