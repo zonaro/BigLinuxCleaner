@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BigLinuxCleaner — Limpeza e manutenção para o seu Big Linux</title>
+    <meta name="description"
+        content="Script de manutenção para o Big Linux: remove pacotes órfãos, atalhos quebrados, resíduos do Flatpak e Snap e atualiza o menu do KDE Plasma. Instale em um comando." />
+    <meta name="theme-color" content="#0a0f1d" />
+    <link rel="icon" type="image/svg+xml" href="img/icon.svg" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+    <!-- ======================= Barra de navegação ======================= -->
+    <header class="nav">
+        <div class="container nav__inner">
+            <a class="nav__brand" href="#topo" aria-label="BigLinuxCleaner — início">
+                <img class="nav__logo" src="img/icon.svg" alt="" width="40" height="40" />
+                BigLinux<em>Cleaner</em>
+            </a>
+
+            <nav aria-label="Navegação principal">
+                <ul class="nav__links" id="nav-links">
+                    <li><a href="#recursos" data-i18n="nav.recursos">O que faz</a></li>
+                    <li><a href="#como-usar" data-i18n="nav.como">Como usar</a></li>
+                    <li><a href="#instalacao" data-i18n="nav.instalacao">Instalação</a></li>
+                    <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+                    <li>
+                        <label class="lang__wrap">
+                            <svg class="lang__icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <path
+                                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                            <span class="sr-only" data-i18n="nav.lang">Idioma / Language</span>
+                            <select class="lang__select" id="lang-select" data-i18n-aria-label="nav.lang"
+                                aria-label="Idioma / Language">
+                                <option value="pt">Português</option>
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                            </select>
+                        </label>
+                    </li>
+                    <li><a class="nav__cta" href="https://github.com/zonaro/BigLinuxCleaner" target="_blank"
+                            rel="noopener" data-i18n="nav.github">Ver no GitHub</a></li>
+                </ul>
+            </nav>
+
+            <button class="nav__toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <main id="topo">
+
+        <!-- ============================ Hero ============================ -->
+        <section class="hero">
+            <img class="hero__glow" src="img/icon.svg" alt="" aria-hidden="true" />
+            <div class="container hero__inner">
+                <div class="hero__text">
+                    <span class="hero__badge reveal" data-i18n="hero.badge">Big Linux · Comunidade</span>
+                    <h1 class="reveal" data-i18n="hero.title">Mantenha seu <span class="grad">Big Linux</span> limpo,
+                        leve e rápido</h1>
+                    <p class="lead reveal" data-i18n="hero.lead">
+                        O <strong>BigLinuxCleaner</strong> é um script de manutenção que remove pacotes
+                        órfãos, atalhos quebrados e resíduos do Flatpak e Snap — e ainda atualiza o menu
+                        do KDE Plasma automaticamente. Tudo com um único comando.
+                    </p>
+                    <div class="hero__ctas reveal">
+                        <a class="btn btn--primary" href="#instalacao">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            <span data-i18n="hero.cta1">Instalar agora</span>
+                        </a>
+                        <a class="btn btn--ghost" href="#como-usar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="4 17 10 11 4 5" />
+                                <line x1="12" y1="19" x2="20" y2="19" />
+                            </svg>
+                            <span data-i18n="hero.cta2">Executar uma vez</span>
+                        </a>
+                    </div>
+                    <p class="hero__note reveal">
+                        <span data-i18n="hero.note">Requer Big Linux ou Arch + KDE Plasma ·</span>
+                        <a href="https://github.com/zonaro/BigLinuxCleaner" target="_blank" rel="noopener"
+                            data-i18n="hero.opensource">Código aberto (MIT)</a>
+                    </p>
+                </div>
+
+                <div class="term reveal" role="img" aria-label="Exemplo de execução do script no terminal">
+                    <div class="term__bar">
+                        <span class="term__dot term__dot--r"></span>
+                        <span class="term__dot term__dot--y"></span>
+                        <span class="term__dot term__dot--g"></span>
+                        <span class="term__title" data-i18n="hero.term">bash — BigLinuxCleaner</span>
+                    </div>
+                    <div class="term__body"><span class="pr">$</span> <span class="cmd">curl -fsSL
+                            https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash</span>
+                        <span class="info">[INFO]</span> <span data-i18n="term.info1">Preparando permissões elevadas
+                            (sudo)...</span>
+                        <span class="info">[INFO]</span> <span data-i18n="term.info2">Verificando atalhos órfãos do
+                            Flatpak por app ID...</span>
+                        <span class="ok">[OK]</span> <span data-i18n="term.ok1">Limpeza do Flatpak concluída.</span>
+                        <span class="info">[INFO]</span> <span data-i18n="term.info3">--- Iniciando varredura de atalhos
+                            quebrados ---</span>
+                        <span class="warn">[WARN]</span> <span data-i18n="term.warn1">Atalho inválido detectado</span>
+                        <span data-i18n="term.app">App:</span> Aplicativo Removido
+                        <span data-i18n="term.arquivo">Arquivo:</span> /usr/share/applications/exemplo.desktop
+                        <span class="ok">[OK]</span> <span data-i18n="term.ok2">Removido com sucesso.</span>
+                        <span class="info">[INFO]</span> <span data-i18n="term.info4">Atualizando cache e menu do KDE
+                            Plasma...</span>
+                        <span class="ok">[OK]</span> <span data-i18n="term.ok3">KRunner e cache do Plasma
+                            atualizados.</span>
+                        <span class="dim"><span data-i18n="term.resumo">--- Resumo ---</span>
+                            <span data-i18n="term.analisados">Arquivos .desktop analisados</span> : 240
+                            <span data-i18n="term.invalidos">Atalhos inválidos encontrados</span> : 3
+                            <span data-i18n="term.remocoes">Remoções concluídas</span> : 3
+                            <span class="ok">[OK]</span> <span data-i18n="term.fim">Processo
+                                finalizado.</span></span><span class="term__cursor"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider">
+                <svg viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <path d="M0,34 C180,80 420,0 720,22 C1020,44 1260,74 1440,26 L1440,70 L0,70 Z" fill="#0e1526" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- ======================= O que faz ======================= -->
+        <section id="recursos" class="section section--alt">
+            <div class="container">
+                <div class="section__head reveal">
+                    <p class="section__kicker" data-i18n="recursos.kicker">O que faz</p>
+                    <h2 data-i18n="recursos.title">Tudo que seu sistema precisa, <span
+                            class="grad">automaticamente</span></h2>
+                    <p class="section__sub" data-i18n="recursos.sub">Um único script cuida da manutenção diária do seu
+                        Big Linux.</p>
+                </div>
+
+                <div class="grid">
+                    <article class="card reveal">
+                        <div class="card__icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 8l-9-5-9 5v8l9 5 9-5z" />
+                                <path d="M3 8l9 5 9-5" />
+                                <path d="M12 13v8" />
+                            </svg>
+                        </div>
+                        <h3 data-i18n="f1.title">Remove pacotes órfãos</h3>
+                        <p data-i18n="f1.desc">Encontra e remove dependências do <code>pacman</code> que não são mais
+                            usadas por nenhum programa, liberando espaço em disco.</p>
+                    </article>
+
+                    <article class="card reveal">
+                        <div class="card__icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M9 13h6" />
+                                <path d="M9 17h6" />
+                            </svg>
+                        </div>
+                        <h3 data-i18n="f2.title">Limpa atalhos quebrados</h3>
+                        <p data-i18n="f2.desc">Varre os arquivos <code>.desktop</code> do sistema, do usuário, do
+                            Flatpak e do Snap e remove entradas que apontam para programas inexistentes.</p>
+                    </article>
+
+                    <article class="card reveal">
+                        <div class="card__icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="3" width="7" height="7" />
+                                <rect x="14" y="3" width="7" height="7" />
+                                <rect x="14" y="14" width="7" height="7" />
+                                <rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                        </div>
+                        <h3 data-i18n="f3.title">Flatpak e Snap em dia</h3>
+                        <p data-i18n="f3.desc">Remove atalhos de apps desinstalados, limpa caches, elimina runtimes e
+                            revisões desabilitadas para recuperar espaço.</p>
+                    </article>
+
+                    <article class="card reveal">
+                        <div class="card__icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M23 4v6h-6" />
+                                <path d="M1 20v-6h6" />
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                            </svg>
+                        </div>
+                        <h3 data-i18n="f4.title">Menu KDE sempre atualizado</h3>
+                        <p data-i18n="f4.desc">Reconstrói o cache do KDE Plasma (<code>kbuildsycoca</code>,
+                            <code>krunner</code> e <code>plasmashell</code>) para que as mudanças apareçam na hora.</p>
+                    </article>
+
+                    <article class="card reveal">
+                        <div class="card__icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                        </div>
+                        <h3 data-i18n="f5.title">Atalho e ícone oficiais</h3>
+                        <p data-i18n="f5.desc">O instalador cria um atalho na Área de trabalho e/ou no Menu, com o ícone
+                            oficial, que roda o script direto do GitHub.</p>
+                    </article>
+
+                    <article class="card reveal">
+                        <div class="card__icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                            </svg>
+                        </div>
+                        <h3 data-i18n="f6.title">100% código aberto</h3>
+                        <p data-i18n="f6.desc">Licença MIT, transparente e auditável. Leia o código-fonte no GitHub
+                            antes de executar — sem segredos.</p>
+                    </article>
+                </div>
+            </div>
+
+            <div class="divider">
+                <svg viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <path d="M0,34 C180,80 420,0 720,22 C1020,44 1260,74 1440,26 L1440,70 L0,70 Z" fill="#0a0f1d" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- ======================= Como usar ======================= -->
+        <section id="como-usar" class="section">
+            <div class="container">
+                <div class="section__head reveal">
+                    <p class="section__kicker" data-i18n="como.kicker">Como usar</p>
+                    <h2 data-i18n="como.title">Execute em <span class="grad">um único comando</span></h2>
+                    <p class="section__sub" data-i18n="como.sub">Sem clonar repositório, sem instalar nada. Cole no
+                        terminal e pronto.</p>
+                </div>
+
+                <div class="cmd-block reveal">
+                    <div class="cmd-block__title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="4 17 10 11 4 5" />
+                            <line x1="12" y1="19" x2="20" y2="19" />
+                        </svg>
+                        <span data-i18n="como.cmd1.t">Rodar a limpeza agora (uma vez)</span>
+                    </div>
+                    <p class="cmd-block__desc" data-i18n="como.cmd1.desc">Baixa o script mais recente do GitHub e
+                        executa direto no seu terminal.</p>
+                    <div class="code">
+                        <pre><span class="p">$</span> <span class="c" data-i18n="como.cmd1.coment"># baixa e executa o cleaner.sh direto do GitHub</span>
+curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash</pre>
+                        <button class="copy" type="button"
+                            data-code="curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash"
+                            data-i18n="botao.copiar">Copiar</button>
+                    </div>
+                </div>
+
+                <div class="alert reveal" data-i18n="como.alert">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span><strong>Atenção:</strong> sempre inspecione scripts antes de executá-los com privilégios. O
+                        script pede <code>sudo</code> apenas quando precisa alterar arquivos em <code>/usr</code> e
+                        <code>/var</code>. Você pode conferir o conteúdo completo em <a
+                            href="https://github.com/zonaro/BigLinuxCleaner/blob/main/cleaner.sh" target="_blank"
+                            rel="noopener">cleaner.sh</a>.</span>
+                </div>
+            </div>
+
+            <div class="divider">
+                <svg viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <path d="M0,34 C180,80 420,0 720,22 C1020,44 1260,74 1440,26 L1440,70 L0,70 Z" fill="#171b26" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- ======================= Instalação ======================= -->
+        <section id="instalacao" class="section section--card">
+            <div class="container">
+                <div class="section__head reveal">
+                    <p class="section__kicker" data-i18n="inst.kicker">Instalação</p>
+                    <h2 data-i18n="inst.title">Crie um atalho com <span class="grad">um clique</span></h2>
+                    <p class="section__sub" data-i18n="inst.sub">Instale o BigLinuxCleaner na Área de trabalho e/ou no
+                        Menu de aplicativos, com o ícone oficial.</p>
+                </div>
+
+                <div class="cmd-block reveal">
+                    <div class="cmd-block__title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        <span data-i18n="inst.cmd1.t">Instalar como atalho (.desktop)</span>
+                    </div>
+                    <p class="cmd-block__desc" data-i18n="inst.cmd1.desc">O atalho abre no terminal, roda a limpeza e
+                        permanece aberto até você pressionar Enter.</p>
+                    <div class="code">
+                        <pre><span class="p">$</span> <span class="c" data-i18n="inst.cmd1.coment"># instala o atalho + ícone (pergunta onde criar)</span>
+curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash</pre>
+                        <button class="copy" type="button"
+                            data-code="curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash"
+                            data-i18n="botao.copiar">Copiar</button>
+                    </div>
+                </div>
+
+                <div class="steps reveal" style="margin-top:52px;">
+                    <div class="step">
+                        <div class="step__num"></div>
+                        <h3 data-i18n="s1.title">Escolha onde criar</h3>
+                        <p data-i18n="s1.desc">O instalador pergunta: <strong>1</strong> Área de trabalho,
+                            <strong>2</strong> Menu de aplicativos ou <strong>3</strong> Ambos.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step__num"></div>
+                        <h3 data-i18n="s2.title">Ícone e atalho instalados</h3>
+                        <p data-i18n="s2.desc">O ícone oficial vai para <code>~/.local/share/icons/</code> e o atalho
+                            <code>.desktop</code> é criado com o comando do cleaner.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step__num"></div>
+                        <h3 data-i18n="s3.title">Pronto! É só clicar</h3>
+                        <p data-i18n="s3.desc">Cada clique no atalho executa a limpeza completa e atualiza o menu do KDE
+                            Plasma automaticamente.</p>
+                    </div>
+                </div>
+
+                <div class="cmd-block reveal" style="margin-top:56px;">
+                    <div class="cmd-block__title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                        <span data-i18n="inst.cmd2.t">Remover o atalho depois</span>
+                    </div>
+                    <p class="cmd-block__desc" data-i18n="inst.cmd2.desc">Se quiser desinstalar o atalho e o ícone, use
+                        a flag <code>--uninstall</code>.</p>
+                    <div class="code">
+                        <pre><span class="p">$</span> curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash -s -- --uninstall</pre>
+                        <button class="copy" type="button"
+                            data-code="curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash -s -- --uninstall"
+                            data-i18n="botao.copiar">Copiar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider">
+                <svg viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+                    <path d="M0,34 C180,80 420,0 720,22 C1020,44 1260,74 1440,26 L1440,70 L0,70 Z" fill="#0a0f1d" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- ============================ FAQ ============================ -->
+        <section id="faq" class="section">
+            <div class="container">
+                <div class="section__head reveal">
+                    <p class="section__kicker" data-i18n="faq.kicker">Perguntas frequentes</p>
+                    <h2 data-i18n="faq.title">Ficou com <span class="grad">dúvidas?</span></h2>
+                    <p class="section__sub" data-i18n="faq.sub">As respostas para as perguntas mais comuns sobre o
+                        script.</p>
+                </div>
+
+                <div class="faq reveal">
+                    <details class="faq__item">
+                        <summary data-i18n="faq.1.q">O que o script faz exatamente?</summary>
+                        <div class="faq__body" data-i18n="faq.1.a">
+                            O <code>cleaner.sh</code> executa cinco tarefas: remove pacotes órfãos do
+                            <code>pacman</code>;
+                            varre e remove atalhos <code>.desktop</code> quebrados (sistema, usuário, Flatpak e Snap);
+                            remove atalhos de apps Flatpak/Snap desinstalados; limpa caches e resíduos do Flatpak e
+                            Snap;
+                            e atualiza o menu e o cache do KDE Plasma (<code>kbuildsycoca</code>, <code>krunner</code>,
+                            <code>plasmashell</code>).
+                        </div>
+                    </details>
+
+                    <details class="faq__item">
+                        <summary data-i18n="faq.2.q">Preciso instalar o Git ou clonar o repositório?</summary>
+                        <div class="faq__body" data-i18n="faq.2.a">
+                            Não. O script roda direto do GitHub via <code>curl</code>, sem clonar nada. O único
+                            pré-requisito
+                            é ter o <code>curl</code> instalado (presente no Big Linux por padrão).
+                        </div>
+                    </details>
+
+                    <details class="faq__item">
+                        <summary data-i18n="faq.3.q">O script é seguro? Ele pede sudo?</summary>
+                        <div class="faq__body" data-i18n="faq.3.a">
+                            O código é aberto (MIT) e pode ser inspecionado no GitHub antes de rodar. Ele solicita
+                            <code>sudo</code> apenas quando precisa alterar arquivos em <code>/usr</code> e
+                            <code>/var</code>
+                            (por exemplo, atalhos de sistema e cache global). Recomendamos sempre revisar scripts antes
+                            de executá-los
+                            com privilégios.
+                        </div>
+                    </details>
+
+                    <details class="faq__item">
+                        <summary data-i18n="faq.4.q">Funciona em outras distros baseadas em Arch?</summary>
+                        <div class="faq__body" data-i18n="faq.4.a">
+                            Sim. O script foi criado para o Big Linux, mas funciona em qualquer distro baseada em Arch
+                            que use <code>pacman</code> e KDE Plasma. Se a ferramenta não existir (Flatpak, Snap etc.),
+                            essa parte é ignorada sem erro.
+                        </div>
+                    </details>
+
+                    <details class="faq__item">
+                        <summary data-i18n="faq.5.q">E se eu não tiver Flatpak ou Snap instalados?</summary>
+                        <div class="faq__body" data-i18n="faq.5.a">
+                            Sem problema. O script detecta a ausência dessas ferramentas e pula as etapas
+                            correspondentes, exibindo um aviso <code>[WARN]</code> — nada é quebrado.
+                        </div>
+                    </details>
+
+                    <details class="faq__item">
+                        <summary data-i18n="faq.6.q">Como desinstalo o atalho depois?</summary>
+                        <div class="faq__body" data-i18n="faq.6.a">
+                            Execute o comando
+                            <code>curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash -s -- --uninstall</code>
+                            (ou baixe o <code>install.sh</code> e rode <code>./install.sh --uninstall</code>). Ele
+                            remove o atalho
+                            <code>.desktop</code> e o ícone instalado, tanto do Menu quanto da Área de trabalho.
+                        </div>
+                    </details>
+
+                    <details class="faq__item">
+                        <summary data-i18n="faq.7.q">Onde encontro o código e como contribuo?</summary>
+                        <div class="faq__body" data-i18n="faq.7.a">
+                            Tudo está no repositório <a href="https://github.com/zonaro/BigLinuxCleaner" target="_blank"
+                                rel="noopener">zonaro/BigLinuxCleaner</a>.
+                            Issues, sugestões e pull requests são muito bem-vindos!
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ============================ Rodapé ============================ -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__cta reveal">
+                <img class="logo-big" src="img/icon.svg" alt="" width="110" height="110" />
+                <h2 data-i18n="footer.tagline">Seja <span class="grad">Big</span>, use o BigLinux!</h2>
+                <p data-i18n="footer.sub">Um projeto independente da comunidade para manter o seu sistema limpo e
+                    rápido.</p>
+                <div class="hero__ctas" style="justify-content:center;">
+                    <a class="btn btn--primary" href="https://github.com/zonaro/BigLinuxCleaner" target="_blank"
+                        rel="noopener">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path
+                                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                        </svg>
+                        <span data-i18n="footer.github">Ver no GitHub</span>
+                    </a>
+                    <a class="btn btn--ghost" href="#como-usar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="4 17 10 11 4 5" />
+                            <line x1="12" y1="19" x2="20" y2="19" />
+                        </svg>
+                        <span data-i18n="footer.executar">Executar agora</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer__disclaimer reveal" data-i18n="footer.disclaimer">
+                Este projeto é <strong>independente</strong> e não possui afiliação, endosso ou patrocínio do projeto
+                BigLinux. “Big Linux” é uma marca de seus respectivos proprietários.
+            </div>
+
+            <div class="footer__cols">
+                <div>
+                    <h4>BigLinuxCleaner</h4>
+                    <p class="footer__brand" data-i18n="footer.col1.p">
+                        Script de limpeza e manutenção para o Big Linux: órfãos, atalhos quebrados e cache do KDE — em
+                        um comando.
+                    </p>
+                </div>
+                <div>
+                    <h4 data-i18n="footer.col2.h">Navegação</h4>
+                    <ul>
+                        <li><a href="#recursos" data-i18n="nav.recursos">O que faz</a></li>
+                        <li><a href="#como-usar" data-i18n="nav.como">Como usar</a></li>
+                        <li><a href="#instalacao" data-i18n="nav.instalacao">Instalação</a></li>
+                        <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 data-i18n="footer.col3.h">Recursos</h4>
+                    <ul>
+                        <li><a href="https://github.com/zonaro/BigLinuxCleaner/blob/main/cleaner.sh" target="_blank"
+                                rel="noopener">cleaner.sh</a></li>
+                        <li><a href="https://github.com/zonaro/BigLinuxCleaner/blob/main/install.sh" target="_blank"
+                                rel="noopener">install.sh</a></li>
+                        <li><a href="https://github.com/zonaro/BigLinuxCleaner/blob/main/icon.svg" target="_blank"
+                                rel="noopener">icon.svg</a></li>
+                        <li><a href="https://github.com/zonaro/BigLinuxCleaner/blob/main/README.md" target="_blank"
+                                rel="noopener">README</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 data-i18n="footer.col4.h">Comunidade</h4>
+                    <ul>
+                        <li><a href="https://github.com/zonaro/BigLinuxCleaner" target="_blank"
+                                rel="noopener">GitHub</a></li>
+                        <li><a href="https://github.com/zonaro/BigLinuxCleaner/issues" target="_blank" rel="noopener"
+                                data-i18n="footer.issues">Reportar problema</a></li>
+                        <li><a href="https://github.com/zonaro/BigLinuxCleaner/fork" target="_blank" rel="noopener"
+                                data-i18n="footer.contribuir">Contribuir</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer__bottom">
+                <span>© <span class="js-year">2026</span> <span data-i18n="footer.license">BigLinuxCleaner · Licença
+                        MIT</span></span>
+                <span data-i18n="footer.made">Desenvolvido para a comunidade Big Linux</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>
