@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner
 
 ## Instalação como atalho (.desktop)
 
-Crie um atalho no seu ambiente (área de trabalho e/ou menu de aplicativos) que executa o `cleaner.sh` direto do GitHub — sem precisar clonar o repositório. O atalho abre no terminal, roda a limpeza e fica aberto até você pressionar Enter.
+Crie um atalho no seu ambiente (área de trabalho e/ou menu de aplicativos) que executa o `cleaner.sh` direto do GitHub — sem precisar clonar o repositório. O atalho abre no **seu terminal padrão** (detectado automaticamente na instalação — konsole, kitty, gnome-terminal, wezterm e outros), roda a limpeza e fica aberto até você pressionar Enter.
 
 ```bash
 # A partir do repositório clonado
@@ -32,7 +32,7 @@ Crie um atalho no seu ambiente (área de trabalho e/ou menu de aplicativos) que 
 curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash
 ```
 
-O instalador pergunta onde você quer o atalho (**Área de trabalho**, **Menu de aplicativos** ou **ambos**), instala o ícone oficial ([`icon.svg`](./icon.svg)) e atualiza o menu do KDE Plasma automaticamente.
+O instalador pergunta onde você quer o atalho (**Área de trabalho**, **Menu de aplicativos** ou **ambos**), instala o ícone oficial (PNG em múltiplos tamanhos: 256/128/64 px) e atualiza o menu do KDE Plasma automaticamente.
 
 Para remover o atalho e o ícone (também direto do GitHub):
 

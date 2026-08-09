@@ -2,8 +2,9 @@
 #
 # install.sh — Instala o BigLinuxCleaner como atalho (.desktop) no sistema.
 #
-# Cria um atalho (Área de trabalho e/ou Menu de aplicativos) que executa o
-# cleaner.sh direto do GitHub e instala o ícone oficial (icon.svg).
+# Cria um atalho (Área de trabalho e/ou Menu de aplicativos) que abre o
+# terminal padrão do usuário e executa o cleaner.sh direto do GitHub, além de
+# instalar o ícone oficial em PNG (256/128/64 px).
 #
 # Uso:
 #   ./install.sh              Instala (pergunta onde criar o atalho)
@@ -14,14 +15,17 @@
 
 set -uo pipefail
 
-CLEANER_URL="https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh"
-ICON_URL="https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/icon.svg"
+RAW_BASE="https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main"
+CLEANER_URL="$RAW_BASE/cleaner.sh"
+ICON_URL="$RAW_BASE/icon.svg"
 
 DESKTOP_ID="biglinuxcleaner.desktop"
-ICON_ID="biglinuxcleaner.svg"
+ICON_NAME="biglinuxcleaner"
+ICON_SIZES=(256 128 64)
 
 MENU_DIR="$HOME/.local/share/applications"
-ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
+HICOLOR_DIR="$HOME/.local/share/icons/hicolor"
+SVG_ICON_DIR="$HICOLOR_DIR/scalable/apps"
 
 # Cores
 GREEN='\033[0;32m'
@@ -54,8 +58,69 @@ get_desktop_dir() {
     echo "$HOME/Desktop"
 }
 
-# Gera o conteúdo do arquivo .desktop (Exec roda o cleaner direto do GitHub).
+# Descobre o terminal padrão do usuário. Não depende de nenhum terminal
+# específico — usa, nesta ordem: xdg-terminal-exec (padrão freedesktop, que
+# resolve o terminal no momento do clique), config do KDE, $TERMINAL,
+# x-terminal-emulator e uma lista de terminais comuns.
+detect_terminal() {
+    local term=""
+
+    if command -v xdg-terminal-exec >/dev/null 2>&1; then
+        term="xdg-terminal-exec"
+    elif command -v kreadconfig6 >/dev/null 2>&1; then
+        term="$(kreadconfig6 --file kdeglobals --group General --key TerminalApplication 2>/dev/null || true)"
+    elif command -v kreadconfig5 >/dev/null 2>&1; then
+        term="$(kreadconfig5 --file kdeglobals --group General --key TerminalApplication 2>/dev/null || true)"
+    fi
+    [[ -z "$term" ]] && term="${TERMINAL:-}"
+
+    if [[ -z "$term" ]] && command -v x-terminal-emulator >/dev/null 2>&1; then
+        term="x-terminal-emulator"
+    fi
+    if [[ -z "$term" ]]; then
+        for t in konsole gnome-terminal kitty alacritty ghostty xfce4-terminal tilix terminator wezterm deepin-terminal urxvt xterm; do
+            if command -v "$t" >/dev/null 2>&1; then
+                term="$t"
+                break
+            fi
+        done
+    fi
+
+    # Normaliza ids como "org.kde.konsole.desktop"/"org.kde.konsole" → "konsole"
+    # e remove field codes do KDE + espaços (ex.: "ashyterm %F" → "ashyterm").
+    term="${term%.desktop}"
+    term="${term##*.}"
+    term="$(printf '%s' "$term" | sed -E 's/%[A-Za-z]//g' | tr -d '[:space:]')"
+    printf '%s' "$term"
+}
+
+# Flags do terminal para executar um comando (ex.: "-e bash -c", "-- bash -c").
+terminal_run_args() {
+    case "$1" in
+        *wezterm*)           printf '%s' "start -- bash -c" ;;
+        *gnome-terminal*)    printf '%s' "-- bash -c" ;;
+        *kitty*)             printf '%s' "bash -c" ;;
+        *xdg-terminal-exec*) printf '%s' "bash -c" ;;
+        *)                   printf '%s' "-e bash -c" ;;
+    esac
+}
+
+# Gera o conteúdo do arquivo .desktop. O Exec abre o terminal padrão do usuário
+# e roda o cleaner direto do GitHub dentro dele.
 build_desktop_content() {
+    local term term_args desktop_term
+
+    term="$(detect_terminal)"
+    if [[ -n "$term" ]]; then
+        term_args="$(terminal_run_args "$term")"
+        desktop_term="Terminal=false"
+    else
+        # Sem terminal detectado: usa o comportamento antigo (Terminal=true + sh -c).
+        term="sh"
+        term_args="-c"
+        desktop_term="Terminal=true"
+    fi
+
     cat <<EOF
 [Desktop Entry]
 Type=Application
@@ -63,36 +128,94 @@ Version=1.0
 Name=BigLinuxCleaner
 GenericName=Limpeza do sistema
 Comment=Limpa atalhos quebrados, órfãos do pacman/flatpak/snap e o cache do KDE Plasma
-Exec=sh -c "curl -fsSL $CLEANER_URL | bash; echo; read -rp \"Pressione Enter para fechar...\""
-Icon=biglinuxcleaner
-Terminal=true
+Exec=${term} ${term_args} "curl -fsSL ${CLEANER_URL} | bash; echo; read -rp \"Pressione Enter para fechar...\""
+Icon=${ICON_NAME}
+${desktop_term}
 Categories=System;
 Keywords=cleaner;limpeza;pacman;flatpak;snap;kde;atalhos;
 StartupNotify=false
 EOF
 }
 
-install_icon() {
-    mkdir -p "$ICON_DIR"
+# Garante que o tema "hicolor" tenha index.theme (necessário para o KDE/GTK
+# encontrarem ícones instalados pelo usuário).
+ensure_hicolor_theme() {
+    if [[ -f "$HICOLOR_DIR/index.theme" ]]; then
+        return 0
+    fi
+    mkdir -p "$HICOLOR_DIR"
+    cat > "$HICOLOR_DIR/index.theme" <<'THEME'
+[Icon Theme]
+Name=Hicolor
+Comment=Fallback icon theme
+Hidden=true
+Directories=256x256/apps,128x128/apps,64x64/apps,scalable/apps
+[256x256/apps]
+Size=256
+Type=Fixed
+Context=Applications
+[128x128/apps]
+Size=128
+Type=Fixed
+Context=Applications
+[64x64/apps]
+Size=64
+Type=Fixed
+Context=Applications
+[scalable/apps]
+Size=128
+Type=Scalable
+Context=Applications
+THEME
+}
 
-    if [[ -f "icon.svg" ]]; then
-        cp -f "icon.svg" "$ICON_DIR/$ICON_ID"
-    elif command -v curl >/dev/null 2>&1; then
-        log_info "Baixando o ícone do GitHub..."
-        curl -fsSL "$ICON_URL" -o "$ICON_DIR/$ICON_ID" || {
-            log_err "Falha ao baixar o ícone de $ICON_URL"
-            return 1
-        }
-    else
-        log_err "Ícone 'icon.svg' não encontrado e 'curl' não está disponível."
-        return 1
+# Atualiza o cache de ícones do tema hicolor (usado por GTK/gerenciadores de
+# arquivos e alguns ambientes).
+refresh_icon_cache() {
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -f -t "$HICOLOR_DIR" >/dev/null 2>&1 || true
+    fi
+}
+
+# Instala o ícone em PNG nos tamanhos oficiais do hicolor.
+install_icon() {
+    local size dir url
+
+    ensure_hicolor_theme
+
+    # Remove ícone SVG de instalações antigas (PNG tem prioridade e evita
+    # conflito com o renderizador QtSvg do KDE).
+    if [[ -f "$SVG_ICON_DIR/$ICON_NAME.svg" ]]; then
+        rm -f "$SVG_ICON_DIR/$ICON_NAME.svg"
+        log_info "Removendo ícone SVG de instalação antiga."
     fi
 
-    [[ -s "$ICON_DIR/$ICON_ID" ]] || {
-        log_err "Ícone instalado parece vazio/corrompido."
-        return 1
-    }
-    log_ok "Ícone instalado em $ICON_DIR/$ICON_ID"
+    for size in "${ICON_SIZES[@]}"; do
+        dir="$HICOLOR_DIR/${size}x${size}/apps"
+        mkdir -p "$dir"
+
+        if [[ -f "icon-$size.png" ]]; then
+            cp -f "icon-$size.png" "$dir/$ICON_NAME.png"
+        elif command -v curl >/dev/null 2>&1; then
+            url="$RAW_BASE/icon-$size.png"
+            log_info "Baixando o ícone (${size}px) do GitHub..."
+            curl -fsSL "$url" -o "$dir/$ICON_NAME.png" || {
+                log_err "Falha ao baixar o ícone de $url"
+                return 1
+            }
+        else
+            log_err "Ícone 'icon-$size.png' não encontrado e 'curl' não está disponível."
+            return 1
+        fi
+
+        if [[ ! -s "$dir/$ICON_NAME.png" ]]; then
+            log_err "Ícone (${size}px) instalado parece vazio/corrompido."
+            return 1
+        fi
+        log_ok "Ícone (${size}px) instalado em $dir/$ICON_NAME.png"
+    done
+
+    refresh_icon_cache
 }
 
 write_desktop() {
@@ -133,7 +256,7 @@ refresh_menu() {
 }
 
 uninstall() {
-    local desktop_dir removed=0
+    local desktop_dir removed=0 size dir
     desktop_dir="$(get_desktop_dir)"
 
     for f in "$MENU_DIR/$DESKTOP_ID" "$desktop_dir/$DESKTOP_ID"; do
@@ -142,11 +265,21 @@ uninstall() {
         fi
     done
 
-    if [[ -f "$ICON_DIR/$ICON_ID" ]]; then
-        rm -f "$ICON_DIR/$ICON_ID" && ((removed += 1))
+    # Ícones em PNG (instalações atuais)
+    for size in "${ICON_SIZES[@]}"; do
+        dir="$HICOLOR_DIR/${size}x${size}/apps"
+        if [[ -f "$dir/$ICON_NAME.png" ]]; then
+            rm -f "$dir/$ICON_NAME.png" && ((removed += 1))
+        fi
+    done
+
+    # Ícone em SVG (instalações antigas)
+    if [[ -f "$SVG_ICON_DIR/$ICON_NAME.svg" ]]; then
+        rm -f "$SVG_ICON_DIR/$ICON_NAME.svg" && ((removed += 1))
     fi
 
     refresh_menu
+    refresh_icon_cache
 
     if ((removed > 0)); then
         log_ok "Atalho e ícone do BigLinuxCleaner removidos."
@@ -204,9 +337,17 @@ main() {
     install_shortcut "$menu" "$desktop" || exit 1
     refresh_menu
 
+    local term
+    term="$(detect_terminal)"
     echo
     log_ok "Instalação concluída!"
-    log_info "O atalho roda o cleaner direto do GitHub: $CLEANER_URL"
+    if [[ "$term" == "xdg-terminal-exec" ]]; then
+        log_info "O atalho abre no seu terminal padrão (resolvido automaticamente)."
+    elif [[ -n "$term" ]]; then
+        log_info "O atalho abre no terminal padrão ($term) e roda o cleaner do GitHub."
+    else
+        log_warn "Nenhum terminal detectado — o atalho usará o terminal do ambiente."
+    fi
     log_info "Para remover depois, execute: ./install.sh --uninstall"
 }
 
