@@ -164,7 +164,18 @@ ask_install_location() {
     echo >&2 "  2) Menu de aplicativos"
     echo >&2 "  3) Ambos (padrão)"
     echo >&2
-    read -rp "Escolha [1/2/3]: " choice
+
+    # Quando o script roda via `curl ... | bash`, o stdin é um pipe (não um
+    # terminal) e o `read` encontra EOF na hora. Nesse caso, lemos do /dev/tty.
+    if [[ -t 0 ]]; then
+        read -rp "Escolha [1/2/3]: " choice
+    elif [[ -r /dev/tty ]]; then
+        read -rp "Escolha [1/2/3]: " choice < /dev/tty
+    else
+        log_err "Sem terminal interativo — não foi possível ler a resposta." >&2
+        return 1
+    fi
+
     choice="${choice:-3}"
     case "$choice" in
         1) echo "0 1" ;; # menu desktop
