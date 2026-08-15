@@ -66,17 +66,17 @@ chmod +x cleaner.sh
 
 ## Requisitos
 
-| Ferramenta          | Obrigatória | Observação                                         |
-| ------------------- | ----------- | -------------------------------------------------- |
-| `bash` ≥ 4          | ✅           | Necessário para arrays associativos                |
-| `pacman`            | ✅           | Limpeza de órfãos (Arch/BigLinux)                  |
-| `sudo`              | ✅           | Remoção de arquivos em `/usr` e `/var`             |
-| `curl`              | ✅           | Auto-atualização e download de ícones da Steam     |
-| `ping`              | ⬜           | Detecção de conectividade (ignorado se ausente)    |
-| `flatpak`           | ⬜           | Ignorado se não encontrado                         |
-| `snap`              | ⬜           | Ignorado se não encontrado                         |
-| `kbuildsycoca5`/`6` | ⬜           | Atualização do KDE (ignorado se ausente)           |
-| `convert`           | ⬜           | ImageMagick — converte ícones da Steam para PNG    |
+| Ferramenta          | Obrigatória | Observação                                      |
+| ------------------- | ----------- | ----------------------------------------------- |
+| `bash` ≥ 4          | ✅           | Necessário para arrays associativos             |
+| `pacman`            | ✅           | Limpeza de órfãos (Arch/BigLinux)               |
+| `sudo`              | ✅           | Remoção de arquivos em `/usr` e `/var`          |
+| `curl`              | ✅           | Auto-atualização e download de ícones da Steam  |
+| `ping`              | ⬜           | Detecção de conectividade (ignorado se ausente) |
+| `flatpak`           | ⬜           | Ignorado se não encontrado                      |
+| `snap`              | ⬜           | Ignorado se não encontrado                      |
+| `kbuildsycoca5`/`6` | ⬜           | Atualização do KDE (ignorado se ausente)        |
+| `convert`           | ⬜           | ImageMagick — converte ícones da Steam para PNG |
 
 ## Licença
 
