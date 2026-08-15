@@ -113,6 +113,14 @@
                         <span class="info">[INFO]</span> <span data-i18n="term.info2">Verificando atalhos órfãos do
                             Flatpak por app ID...</span>
                         <span class="ok">[OK]</span> <span data-i18n="term.ok1">Limpeza do Flatpak concluída.</span>
+                        <span class="info">[INFO]</span> <span data-i18n="term.steam_info">--- Corrigindo ícones de atalhos da
+                            Steam ---</span>
+                        <span class="warn">[WARN]</span> <span data-i18n="term.steam_warn">Ícone inválido detectado</span>
+                        <span data-i18n="term.app">App:</span> CS2
+                        <span class="info">[INFO]</span> <span data-i18n="term.steam_dl">Baixando ícone do jogo (Steam AppID:
+                            730)...</span>
+                        <span class="ok">[OK]</span> <span data-i18n="term.steam_ok">Ícone corrigido: cs2 →
+                            ~/.local/share/icons/steam-games/730.png</span>
                         <span class="info">[INFO]</span> <span data-i18n="term.info3">--- Iniciando varredura de atalhos
                             quebrados ---</span>
                         <span class="warn">[WARN]</span> <span data-i18n="term.warn1">Atalho inválido detectado</span>
@@ -127,6 +135,7 @@
                             <span data-i18n="term.analisados">Arquivos .desktop analisados</span> : 240
                             <span data-i18n="term.invalidos">Atalhos inválidos encontrados</span> : 3
                             <span data-i18n="term.remocoes">Remoções concluídas</span> : 3
+                            <span data-i18n="term.steam_fix">Ícones Steam corrigidos</span> : 2
                             <span class="ok">[OK]</span> <span data-i18n="term.fim">Processo
                                 finalizado.</span></span><span class="term__cursor"></span>
                     </div>
@@ -236,6 +245,21 @@
                         <h3 data-i18n="f6.title">100% código aberto</h3>
                         <p data-i18n="f6.desc">Licença MIT, transparente e auditável. Leia o código-fonte no GitHub
                             antes de executar — sem segredos.</p>
+                    </article>
+
+                    <article class="card reveal">
+                        <div class="card__icon">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2" y="6" width="20" height="12" rx="2" />
+                                <path d="M12 12h.01" />
+                                <path d="M17 12h.01" />
+                                <path d="M7 12h.01" />
+                            </svg>
+                        </div>
+                        <h3 data-i18n="f7.title">Ícones da Steam corrigidos</h3>
+                        <p data-i18n="f7.desc">Detecta atalhos da Steam com ícones inválidos e baixa o ícone correto
+                            automaticamente a partir do ID do jogo na CDN da Steam.</p>
                     </article>
                 </div>
             </div>
@@ -463,6 +487,16 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install
                             Issues, sugestões e pull requests são muito bem-vindos!
                         </div>
                     </details>
+
+                    <details class="faq__item">
+                        <summary data-i18n="faq.8.q">E se os ícones dos jogos da Steam estiverem quebrados?</summary>
+                        <div class="faq__body" data-i18n="faq.8.a">
+                            O script detecta atalhos da Steam com ícones inválidos (arquivo inexistente ou tema não
+                            encontrado), extrai o ID do jogo da URL <code>steam://rungameid/{id}</code> e baixa o
+                            ícone correto automaticamente da CDN da Steam. Os ícones são salvos em
+                            <code>~/.local/share/icons/steam-games/</code> e os atalhos são atualizados.
+                        </div>
+                    </details>
                 </div>
             </div>
         </section>
@@ -506,8 +540,8 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install
                 <div>
                     <h4>BigLinuxCleaner</h4>
                     <p class="footer__brand" data-i18n="footer.col1.p">
-                        Script de limpeza e manutenção para o Big Linux: órfãos, atalhos quebrados e cache do KDE — em
-                        um comando.
+                        Script de limpeza e manutenção para o Big Linux: órfãos, atalhos quebrados, ícones da Steam e
+                        cache do KDE — em um comando.
                     </p>
                 </div>
                 <div>

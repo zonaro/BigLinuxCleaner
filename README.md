@@ -4,6 +4,7 @@ Script Bash para limpeza e manutenção do **Big Linux** (e outros sistemas base
 
 - **Remove pacotes órfãos** via `pacman` (pacotes instalados como dependência que não são mais necessários).
 - **Limpa atalhos quebrados** (`.desktop`) no menu de aplicativos — verifica entradas inválidas nos diretórios do sistema, do usuário, do Flatpak e do Snap.
+- **Corrige ícones da Steam** — detecta atalhos da Steam com ícones inválidos e baixa o ícone correto automaticamente a partir do ID do jogo na CDN da Steam.
 - **Remove atalhos de apps Flatpak desinstalados** cruzando os arquivos `.desktop` com a lista de aplicativos instalados.
 - **Remove atalhos de apps Snap desinstalados** de forma semelhante.
 - **Limpa o cache do Flatpak** (cache local do usuário e cache global) e remove runtimes/pacotes sem uso.
@@ -59,9 +60,11 @@ chmod +x cleaner.sh
 | `bash` ≥ 4          | ✅           | Necessário para arrays associativos      |
 | `pacman`            | ✅           | Limpeza de órfãos (Arch/BigLinux)        |
 | `sudo`              | ✅           | Remoção de arquivos em `/usr` e `/var`   |
+| `curl`              | ✅           | Download de ícones da Steam              |
 | `flatpak`           | ⬜           | Ignorado se não encontrado               |
 | `snap`              | ⬜           | Ignorado se não encontrado               |
 | `kbuildsycoca5`/`6` | ⬜           | Atualização do KDE (ignorado se ausente) |
+| `convert`           | ⬜           | ImageMagick — converte ícones para PNG   |
 
 ## Licença
 

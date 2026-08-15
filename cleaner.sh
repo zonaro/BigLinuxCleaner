@@ -25,6 +25,7 @@ SCANNED=0
 INVALID=0
 REMOVED=0
 FAILED=0
+STEAM_FIXED=0
 
 log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
 log_ok() { echo -e "${GREEN}[OK]${NC} $*"; }
@@ -270,6 +271,148 @@ remove_desktop_file() {
     return 1
 }
 
+# Verifica se o ícone de um .desktop é válido: arquivo existente ou nome de
+# tema resolvível no hicolor. Retorna 0 (true) se válido, 1 caso contrário.
+is_icon_valid() {
+    local icon_value="$1"
+
+    [[ -z "$icon_value" ]] && return 1
+
+    # Caminho absoluto ou relativo — verifica se o arquivo existe.
+    if [[ "$icon_value" == /* ]]; then
+        [[ -f "$icon_value" ]] && return 0
+    fi
+
+    # Nome de tema (ex.: steam_icon_730) — verifica nos diretórios hicolor.
+    local size
+    for size in 256x256 128x128 64x64 48x48 32x32 16x16 scalable; do
+        if [[ -f "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.png" ]] ||
+           [[ -f "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.svg" ]] ||
+           [[ -f "/usr/share/icons/hicolor/$size/apps/$icon_value.png" ]] ||
+           [[ -f "/usr/share/icons/hicolor/$size/apps/$icon_value.svg" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+# Corrige ícones de atalhos da Steam que apontam para arquivos inexistentes.
+# Baixa o header.jpg do jogo a partir do game ID na URL steam://rungameid/{id}
+# e salva como ícone local. Se o ImageMagick estiver disponível, converte para
+# PNG 256x256 com fundo transparente para melhor compatibilidade.
+fix_steam_shortcut_icons() {
+    local dir file exec_line icon_line icon_value game_id
+    local steam_icon_dir="$HOME/.local/share/icons/steam-games"
+    local has_convert=0
+
+    if command -v convert >/dev/null 2>&1; then
+        has_convert=1
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_warn "curl não encontrado; correção de ícones da Steam ignorada."
+        return
+    fi
+
+    log_info "--- Corrigindo ícones de atalhos da Steam ---"
+
+    mkdir -p "$steam_icon_dir"
+
+    for dir in "${DIRS[@]}"; do
+        [[ -d "$dir" ]] || continue
+
+        while IFS= read -r -d '' file; do
+            exec_line="$(grep -m 1 '^Exec=' "$file" 2>/dev/null || true)"
+
+            # Detecta atalhos da Steam via steam://rungameid/{id}.
+            if [[ ! "$exec_line" =~ steam://rungameid/([0-9]+) ]]; then
+                continue
+            fi
+
+            game_id="${BASH_REMATCH[1]}"
+
+            # Verifica se o ícone atual já é válido.
+            icon_line="$(grep -m 1 '^Icon=' "$file" 2>/dev/null || true)"
+            icon_value="${icon_line#Icon=}"
+
+            if is_icon_valid "$icon_value"; then
+                continue
+            fi
+
+            log_warn "Ícone inválido detectado: $(basename "$file" .desktop)"
+            echo -e "  Arquivo: $file"
+            echo -e "  Game ID: ${YELLOW}${game_id}${NC}"
+            echo -e "  Icon atual: ${icon_value:-vazio}"
+
+            # Define o caminho final do ícone.
+            local final_icon
+
+            # Verifica se já baixamos anteriormente.
+            if [[ -f "$steam_icon_dir/${game_id}.png" ]]; then
+                final_icon="$steam_icon_dir/${game_id}.png"
+            elif [[ -f "$steam_icon_dir/${game_id}.jpg" ]]; then
+                final_icon="$steam_icon_dir/${game_id}.jpg"
+            else
+                # Baixa o header do jogo da CDN da Steam.
+                local header_url="https://cdn.akamai.steamstatic.com/steam/apps/${game_id}/header.jpg"
+                local tmp_header="$steam_icon_dir/${game_id}_tmp.jpg"
+
+                log_info "Baixando ícone do jogo (Steam AppID: $game_id)..."
+                if ! curl -fsSL --max-time 10 "$header_url" -o "$tmp_header" 2>/dev/null; then
+                    # Tenta o fallback via Cloudflare.
+                    header_url="https://cdn.cloudflare.steamstatic.com/steam/apps/${game_id}/header.jpg"
+                    curl -fsSL --max-time 10 "$header_url" -o "$tmp_header" 2>/dev/null || true
+                fi
+
+                if [[ ! -s "$tmp_header" ]]; then
+                    log_err "Falha ao baixar ícone do jogo $game_id — pulando."
+                    rm -f "$tmp_header"
+                    continue
+                fi
+
+                # Converte para PNG 256x256 se ImageMagick disponível, senão
+                # mantém como JPG.
+                if ((has_convert)); then
+                    if convert "$tmp_header" \
+                        -background none \
+                        -gravity center \
+                        -resize 256x256 \
+                        -extent 256x256 \
+                        "$steam_icon_dir/${game_id}.png" 2>/dev/null; then
+                        final_icon="$steam_icon_dir/${game_id}.png"
+                        rm -f "$tmp_header"
+                    else
+                        # Fallback: renomeia para .jpg
+                        mv "$tmp_header" "$steam_icon_dir/${game_id}.jpg"
+                        final_icon="$steam_icon_dir/${game_id}.jpg"
+                    fi
+                else
+                    mv "$tmp_header" "$steam_icon_dir/${game_id}.jpg"
+                    final_icon="$steam_icon_dir/${game_id}.jpg"
+                fi
+            fi
+
+            if [[ -z "$final_icon" || ! -s "$final_icon" ]]; then
+                log_err "Ícone do jogo $game_id não pôde ser obtido."
+                continue
+            fi
+
+            # Atualiza o campo Icon= no arquivo .desktop.
+            sed -i "s|^Icon=.*|Icon=${final_icon}|" "$file"
+            ((STEAM_FIXED += 1))
+            log_ok "Ícone corrigido: $(basename "$file" .desktop) → $final_icon"
+
+        done < <(find "$dir" -maxdepth 1 -type f -name '*.desktop' -print0 2>/dev/null)
+    done
+
+    if ((STEAM_FIXED > 0)); then
+        log_ok "Total de ícones da Steam corrigidos: $STEAM_FIXED"
+    else
+        log_ok "Nenhum ícone da Steam precisou de correção."
+    fi
+}
+
 scan_and_clean_desktop_entries() {
     local dir file app_name exec_line exec_bin
 
@@ -354,6 +497,7 @@ show_summary() {
     echo "Atalhos inválidos encontrados : $INVALID"
     echo "Remoções concluídas          : $REMOVED"
     echo "Falhas de remoção            : $FAILED"
+    echo "Ícones Steam corrigidos      : $STEAM_FIXED"
     echo
     log_ok "Processo finalizado."
 }
@@ -364,6 +508,7 @@ main() {
     teste_and_remove_snap
     cleanup_orphans
     cleanup_flatpak_snap_cache
+    fix_steam_shortcut_icons
     scan_and_clean_desktop_entries
     refresh_kde
     show_summary
