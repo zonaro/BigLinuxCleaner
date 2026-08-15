@@ -4,11 +4,6 @@
 
 set -Eeuo pipefail
 
-# --- Configuração e Constantes ---
-RAW_BASE="https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main"
-REMOTE_URL="$RAW_BASE/cleaner.sh"
-LOCAL_SCRIPT="$HOME/.local/share/BigLinuxCleaner/cleaner.sh"
-
 # Cores
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -31,64 +26,11 @@ INVALID=0
 REMOVED=0
 FAILED=0
 STEAM_FIXED=0
-OFFLINE_MODE=0
 
 log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
 log_ok() { echo -e "${GREEN}[OK]${NC} $*"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 log_err() { echo -e "${RED}[ERRO]${NC} $*"; }
-
-# Verifica se o sistema está online
-check_connectivity() {
-    if ping -c 1 -W 2 google.com >/dev/null 2>&1; then
-        return 0
-    fi
-    return 1
-}
-
-# Tenta atualizar o script local a partir do GitHub
-try_update_script() {
-    # Se já estamos na versão re-executada, não tenta atualizar de novo
-    if [[ "${1:-}" == "--no-reexec" ]]; then
-        return 0
-    fi
-
-    log_info "Verificando atualizações..."
-
-    if ! check_connectivity; then
-        log_warn "Sem conexão com a internet. Executando versão local."
-        OFFLINE_MODE=1
-        return 1
-    fi
-
-    log_info "Baixando a versão mais recente do BigLinuxCleaner..."
-    local tmp_script
-    tmp_script=$(mktemp)
-    
-    if curl -fsSL --max-time 10 "$REMOTE_URL" -o "$tmp_script" 2>/dev/null; then
-        # Verifica se o script baixado é válido
-        if head -n 1 "$tmp_script" | grep -q '^#!/bin/bash'; then
-            # Compara com a versão local para evitar reinstalação desnecessária
-            if [[ -f "$LOCAL_SCRIPT" ]] && diff -q "$tmp_script" "$LOCAL_SCRIPT" >/dev/null 2>&1; then
-                rm -f "$tmp_script"
-                log_ok "Script já está atualizado."
-                return 0
-            fi
-
-            mkdir -p "$(dirname "$LOCAL_SCRIPT")"
-            if mv "$tmp_script" "$LOCAL_SCRIPT" 2>/dev/null; then
-                chmod +x "$LOCAL_SCRIPT"
-                log_ok "Script atualizado com sucesso!"
-                log_info "Reiniciando com a versão atualizada..."
-                exec bash "$LOCAL_SCRIPT" "--no-reexec"
-            fi
-        fi
-        rm -f "$tmp_script"
-    fi
-    
-    log_warn "Não foi possível atualizar. Usando versão local."
-    return 1
-}
 
 trap 'log_err "Falha na linha ${LINENO}. Abortando."' ERR
 
@@ -329,42 +271,54 @@ remove_desktop_file() {
     return 1
 }
 
-# Verifica se o ícone de um .desktop é válido: arquivo existente ou nome de
-# tema resolvível no hicolor. Retorna 0 (true) se válido, 1 caso contrário.
+# Verifica se o ícone de um .desktop é válido: arquivo existente, não vazio e
+# com resolução mínima (quando exigida). Retorna 0 (true) se válido, 1 caso
+# contrário.
 is_icon_valid() {
     local icon_value="$1"
+    local min_size="${2:-0}"
+    local size px found=""
 
     [[ -z "$icon_value" ]] && return 1
 
-    # Caminho absoluto ou relativo — verifica se o arquivo existe.
+    # Caminho absoluto ou relativo — verifica se o arquivo existe e não é vazio.
     if [[ "$icon_value" == /* ]]; then
-        [[ -f "$icon_value" ]] && return 0
+        [[ -s "$icon_value" ]] && return 0
+        return 1
     fi
 
-    # Nome de tema (ex.: steam_icon_730) — verifica nos diretórios hicolor.
-    local size
+    # Nome de tema (ex.: steam_icon_730) — procura o maior tamanho disponível
+    # no hicolor (usuário primeiro, depois sistema).
     for size in 256x256 128x128 64x64 48x48 32x32 16x16 scalable; do
-        if [[ -f "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.png" ]] ||
-           [[ -f "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.svg" ]] ||
-           [[ -f "/usr/share/icons/hicolor/$size/apps/$icon_value.png" ]] ||
-           [[ -f "/usr/share/icons/hicolor/$size/apps/$icon_value.svg" ]]; then
-            return 0
+        if [[ -s "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.png" ]] ||
+           [[ -s "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.svg" ]] ||
+           [[ -s "/usr/share/icons/hicolor/$size/apps/$icon_value.png" ]] ||
+           [[ -s "/usr/share/icons/hicolor/$size/apps/$icon_value.svg" ]]; then
+            found="$size"
+            break
         fi
     done
 
-    return 1
+    [[ -z "$found" ]] && return 1
+
+    # SVG escalável atende a qualquer resolução.
+    [[ "$found" == "scalable" ]] && return 0
+
+    px="${found%x*}"
+    (( px >= min_size ))
 }
 
-# Corrige ícones de atalhos da Steam que apontam para arquivos inexistentes.
-# Baixa o header.jpg do jogo a partir do game ID na URL steam://rungameid/{id}
-# e salva como ícone local. Se o ImageMagick estiver disponível, converte para
-# PNG 256x256 com fundo transparente para melhor compatibilidade.
+# Corrige ícones de atalhos da Steam que estão faltando ou com resolução
+# insuficiente. Baixa o header.jpg do jogo a partir do game ID na URL
+# steam://rungameid/{id}, converte para PNG 256x256 e instala no tema hicolor
+# como steam_icon_{id} (padrão da Steam).
 fix_steam_shortcut_icons() {
     local dir file exec_line icon_line icon_value game_id
-    local steam_icon_dir="$HOME/.local/share/icons/steam-games"
+    local hicolor_256="$HOME/.local/share/icons/hicolor/256x256/apps"
+    local tmp_dir="$HOME/.local/share/icons/steam-games"
     local has_convert=0
 
-    if command -v convert >/dev/null 2>&1; then
+    if command -v convert >/dev/null 2>&1 || command -v magick >/dev/null 2>&1; then
         has_convert=1
     fi
 
@@ -373,15 +327,9 @@ fix_steam_shortcut_icons() {
         return
     fi
 
-    # Se estiver offline, pula o download de novos ícones
-    if [[ "$OFFLINE_MODE" -eq 1 ]]; then
-        log_warn "Modo offline: pulando download de ícones da Steam."
-        return
-    fi
-
     log_info "--- Corrigindo ícones de atalhos da Steam ---"
 
-    mkdir -p "$steam_icon_dir"
+    mkdir -p "$hicolor_256" "$tmp_dir"
 
     for dir in "${DIRS[@]}"; do
         [[ -d "$dir" ]] || continue
@@ -396,11 +344,11 @@ fix_steam_shortcut_icons() {
 
             game_id="${BASH_REMATCH[1]}"
 
-            # Verifica se o ícone atual já é válido.
+            # Verifica se o ícone atual já é válido (exige resolução mínima).
             icon_line="$(grep -m 1 '^Icon=' "$file" 2>/dev/null || true)"
             icon_value="${icon_line#Icon=}"
 
-            if is_icon_valid "$icon_value"; then
+            if is_icon_valid "$icon_value" 128; then
                 continue
             fi
 
@@ -409,18 +357,17 @@ fix_steam_shortcut_icons() {
             echo -e "  Game ID: ${YELLOW}${game_id}${NC}"
             echo -e "  Icon atual: ${icon_value:-vazio}"
 
-            # Define o caminho final do ícone.
-            local final_icon
+            # Caminho final no tema hicolor (padrão da Steam).
+            local final_icon=""
+            local theme_icon="$hicolor_256/steam_icon_${game_id}.png"
 
-            # Verifica se já baixamos anteriormente.
-            if [[ -f "$steam_icon_dir/${game_id}.png" ]]; then
-                final_icon="$steam_icon_dir/${game_id}.png"
-            elif [[ -f "$steam_icon_dir/${game_id}.jpg" ]]; then
-                final_icon="$steam_icon_dir/${game_id}.jpg"
+            # Se já corrigimos antes, não baixa de novo.
+            if [[ -s "$theme_icon" ]]; then
+                final_icon="$theme_icon"
             else
                 # Baixa o header do jogo da CDN da Steam.
                 local header_url="https://cdn.akamai.steamstatic.com/steam/apps/${game_id}/header.jpg"
-                local tmp_header="$steam_icon_dir/${game_id}_tmp.jpg"
+                local tmp_header="$tmp_dir/${game_id}_tmp.jpg"
 
                 log_info "Baixando ícone do jogo (Steam AppID: $game_id)..."
                 if ! curl -fsSL --max-time 10 "$header_url" -o "$tmp_header" 2>/dev/null; then
@@ -435,25 +382,25 @@ fix_steam_shortcut_icons() {
                     continue
                 fi
 
-                # Converte para PNG 256x256 se ImageMagick disponível, senão
-                # mantém como JPG.
                 if ((has_convert)); then
+                    # Converte para PNG 256x256 com fundo transparente.
                     if convert "$tmp_header" \
                         -background none \
                         -gravity center \
                         -resize 256x256 \
                         -extent 256x256 \
-                        "$steam_icon_dir/${game_id}.png" 2>/dev/null; then
-                        final_icon="$steam_icon_dir/${game_id}.png"
-                        rm -f "$tmp_header"
+                        "$theme_icon" 2>/dev/null; then
+                        final_icon="$theme_icon"
                     else
-                        # Fallback: renomeia para .jpg
-                        mv "$tmp_header" "$steam_icon_dir/${game_id}.jpg"
-                        final_icon="$steam_icon_dir/${game_id}.jpg"
+                        log_err "Falha ao converter o ícone do jogo $game_id."
+                        rm -f "$tmp_header"
+                        continue
                     fi
+                    rm -f "$tmp_header"
                 else
-                    mv "$tmp_header" "$steam_icon_dir/${game_id}.jpg"
-                    final_icon="$steam_icon_dir/${game_id}.jpg"
+                    # Sem ImageMagick: mantém o header.jpg (460x215) em pasta própria.
+                    mv "$tmp_header" "$tmp_dir/${game_id}.jpg"
+                    final_icon="$tmp_dir/${game_id}.jpg"
                 fi
             fi
 
@@ -463,7 +410,16 @@ fix_steam_shortcut_icons() {
             fi
 
             # Atualiza o campo Icon= no arquivo .desktop.
-            sed -i "s|^Icon=.*|Icon=${final_icon}|" "$file"
+            if [[ "$final_icon" == "$theme_icon" ]]; then
+                # Usa o nome de tema (padrão da Steam) para o hicolor.
+                if [[ "$icon_value" != "steam_icon_${game_id}" ]]; then
+                    sed -i "s|^Icon=.*|Icon=steam_icon_${game_id}|" "$file"
+                fi
+            else
+                # Caminho absoluto (fallback sem ImageMagick).
+                sed -i "s|^Icon=.*|Icon=${final_icon}|" "$file"
+            fi
+
             ((STEAM_FIXED += 1))
             log_ok "Ícone corrigido: $(basename "$file" .desktop) → $final_icon"
 
@@ -471,6 +427,10 @@ fix_steam_shortcut_icons() {
     done
 
     if ((STEAM_FIXED > 0)); then
+        # Atualiza o cache de ícones do tema hicolor.
+        if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+        fi
         log_ok "Total de ícones da Steam corrigidos: $STEAM_FIXED"
     else
         log_ok "Nenhum ícone da Steam precisou de correção."
@@ -567,9 +527,6 @@ show_summary() {
 }
 
 main() {
-    # Verifica atualização no início da execução (se online)
-    try_update_script
-    
     prepare_sudo
     teste_and_remove_flatpak
     teste_and_remove_snap
@@ -581,15 +538,4 @@ main() {
     show_summary
 }
 
-# Se estiver rodando como o script local, tenta atualizar
-if [[ "${BASH_SOURCE[0]:-}" == "$0" ]] || [[ -z "${BASH_SOURCE[0]:-}" ]]; then
-    # Se não existir localmente, cria o diretório e salva
-    if [[ -n "$LOCAL_SCRIPT" ]] && [[ ! -f "$LOCAL_SCRIPT" ]]; then
-        mkdir -p "$(dirname "$LOCAL_SCRIPT")"
-        if [[ -f "${BASH_SOURCE[0]:-}" ]]; then
-            cp "${BASH_SOURCE[0]:-}" "$LOCAL_SCRIPT"
-            chmod +x "$LOCAL_SCRIPT"
-        fi
-    fi
-    main
-fi
+main

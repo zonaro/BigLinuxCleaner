@@ -4,14 +4,14 @@ Script Bash para limpeza e manutenção do **Big Linux** (e outros sistemas base
 
 - **Remove pacotes órfãos** via `pacman` (pacotes instalados como dependência que não são mais necessários).
 - **Limpa atalhos quebrados** (`.desktop`) no menu de aplicativos — verifica entradas inválidas nos diretórios do sistema, do usuário, do Flatpak e do Snap.
-- **Corrige ícones da Steam** — detecta atalhos da Steam com ícones inválidos e baixa o ícone correto automaticamente a partir do ID do jogo na CDN da Steam (pulado se offline).
+- **Corrige ícones da Steam** — detecta atalhos da Steam com ícones faltando ou com resolução insuficiente e baixa o ícone correto automaticamente a partir do ID do jogo na CDN da Steam.
 - **Remove atalhos de apps Flatpak desinstalados** cruzando os arquivos `.desktop` com a lista de aplicativos instalados.
 - **Remove atalhos de apps Snap desinstalados** de forma semelhante.
 - **Limpa o cache do Flatpak** (cache local do usuário e cache global) e remove runtimes/pacotes sem uso.
 - **Limpa revisões desabilitadas do Snap** e o cache do daemon.
 - **Atualiza o menu e o cache do KDE Plasma** (`kbuildsycoca`, `krunner`, `plasmashell`) para refletir as mudanças imediatamente.
-
----
+ 
+ ---
 
 Execute o script diretamente no terminal sem precisar clonar o repositório:
 
@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner
 
 ## Instalação como atalho (.desktop)
 
-Crie um atalho no seu ambiente (área de trabalho e/ou menu de aplicativos) que executa o `cleaner.sh` localmente. O instalador salva uma cópia do script em `~/.local/share/BigLinuxCleaner/` e cria o atalho `.desktop` apontando para ele. O atalho abre no **seu terminal padrão** (detectado automaticamente — konsole, kitty, gnome-terminal, wezterm e outros), roda a limpeza e fica aberto até você pressionar Enter.
+Crie um atalho no seu ambiente (área de trabalho e/ou menu de aplicativos) que executa o `cleaner.sh` direto do GitHub — sem precisar clonar o repositório. O atalho abre no **seu terminal padrão** (detectado automaticamente na instalação — konsole, kitty, gnome-terminal, wezterm e outros), roda a limpeza e fica aberto até você pressionar Enter.
 
 ```bash
 # A partir do repositório clonado
@@ -35,18 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install
 
 O instalador pergunta onde você quer o atalho (**Área de trabalho**, **Menu de aplicativos** ou **ambos**), instala o ícone oficial (PNG em múltiplos tamanhos: 256/128/64 px) e atualiza o menu do KDE Plasma automaticamente.
 
-### Modo offline
-
-O BigLinuxCleaner funciona completamente offline depois de instalado:
-
-- Na primeira execução, o script é salvo localmente em `~/.local/share/BigLinuxCleaner/cleaner.sh`.
-- Se a máquina estiver **online**, o script tenta baixar a versão mais recente do GitHub antes de executar — você sempre terá a versão mais atualizada.
-- Se a máquina estiver **offline**, o script executa a versão em cache local sem erros. Nesse modo, o download de ícones da Steam é pulado automaticamente.
-- A detecção de conectividade é feita via `ping` no Google — se não houver resposta, o modo offline é ativado.
-
-### Desinstalar
-
-Para remover o atalho, o ícone e o script local:
+Para remover o atalho e o ícone (também direto do GitHub):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash -s -- --uninstall
@@ -66,17 +55,16 @@ chmod +x cleaner.sh
 
 ## Requisitos
 
-| Ferramenta          | Obrigatória | Observação                                      |
-| ------------------- | ----------- | ----------------------------------------------- |
-| `bash` ≥ 4          | ✅           | Necessário para arrays associativos             |
-| `pacman`            | ✅           | Limpeza de órfãos (Arch/BigLinux)               |
-| `sudo`              | ✅           | Remoção de arquivos em `/usr` e `/var`          |
-| `curl`              | ✅           | Auto-atualização e download de ícones da Steam  |
-| `ping`              | ⬜           | Detecção de conectividade (ignorado se ausente) |
-| `flatpak`           | ⬜           | Ignorado se não encontrado                      |
-| `snap`              | ⬜           | Ignorado se não encontrado                      |
-| `kbuildsycoca5`/`6` | ⬜           | Atualização do KDE (ignorado se ausente)        |
-| `convert`           | ⬜           | ImageMagick — converte ícones da Steam para PNG |
+| Ferramenta          | Obrigatória | Observação                               |
+| ------------------- | ----------- | ---------------------------------------- |
+| `bash` ≥ 4          | ✅           | Necessário para arrays associativos      |
+| `pacman`            | ✅           | Limpeza de órfãos (Arch/BigLinux)        |
+| `sudo`              | ✅           | Remoção de arquivos em `/usr` e `/var`   |
+| `curl`              | ✅           | Download de ícones da Steam              |
+| `flatpak`           | ⬜           | Ignorado se não encontrado               |
+| `snap`              | ⬜           | Ignorado se não encontrado               |
+| `kbuildsycoca5`/`6` | ⬜           | Atualização do KDE (ignorado se ausente) |
+| `convert`           | ⬜           | ImageMagick — converte ícones para PNG   |
 
 ## Licença
 

@@ -113,14 +113,11 @@
                         <span class="info">[INFO]</span> <span data-i18n="term.info2">Verificando atalhos órfãos do
                             Flatpak por app ID...</span>
                         <span class="ok">[OK]</span> <span data-i18n="term.ok1">Limpeza do Flatpak concluída.</span>
-                        <span class="info">[INFO]</span> <span data-i18n="term.steam_info">--- Corrigindo ícones de
-                            atalhos da
+                        <span class="info">[INFO]</span> <span data-i18n="term.steam_info">--- Corrigindo ícones de atalhos da
                             Steam ---</span>
-                        <span class="warn">[WARN]</span> <span data-i18n="term.steam_warn">Ícone inválido
-                            detectado</span>
+                        <span class="warn">[WARN]</span> <span data-i18n="term.steam_warn">Ícone inválido detectado</span>
                         <span data-i18n="term.app">App:</span> CS2
-                        <span class="info">[INFO]</span> <span data-i18n="term.steam_dl">Baixando ícone do jogo (Steam
-                            AppID:
+                        <span class="info">[INFO]</span> <span data-i18n="term.steam_dl">Baixando ícone do jogo (Steam AppID:
                             730)...</span>
                         <span class="ok">[OK]</span> <span data-i18n="term.steam_ok">Ícone corrigido: cs2 →
                             ~/.local/share/icons/steam-games/730.png</span>
@@ -220,8 +217,7 @@
                         </div>
                         <h3 data-i18n="f4.title">Menu KDE sempre atualizado</h3>
                         <p data-i18n="f4.desc">Reconstrói o cache do KDE Plasma (<code>kbuildsycoca</code>,
-                            <code>krunner</code> e <code>plasmashell</code>) para que as mudanças apareçam na hora.
-                        </p>
+                            <code>krunner</code> e <code>plasmashell</code>) para que as mudanças apareçam na hora.</p>
                     </article>
 
                     <article class="card reveal">
@@ -233,24 +229,9 @@
                                 <line x1="12" y1="15" x2="12" y2="3" />
                             </svg>
                         </div>
-                        <h3 data-i18n="f5.title">Atalho local com auto-atualização</h3>
-                        <p data-i18n="f5.desc">O instalador salva o script em
-                            <code>~/.local/share/BigLinuxCleaner/</code> e cria um atalho que o executa. Se online, ele
-                            tenta baixar a versão mais recente; se offline, roda o que está em cache.
-                        </p>
-                    </article>
-
-                    <article class="card reveal">
-                        <div class="card__icon">
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-                                <line x1="12" y1="2" x2="12" y2="12" />
-                            </svg>
-                        </div>
-                        <h3 data-i18n="f8.title">Funciona offline</h3>
-                        <p data-i18n="f8.desc">Depois de instalado, roda sem internet. Se offline, pula downloads da
-                            Steam e usa a versão em cache — sem erros, sem travamentos.</p>
+                        <h3 data-i18n="f5.title">Atalho e ícone oficiais</h3>
+                        <p data-i18n="f5.desc">O instalador cria um atalho na Área de trabalho e/ou no Menu, com o ícone
+                            oficial, que roda o script direto do GitHub.</p>
                     </article>
 
                     <article class="card reveal">
@@ -277,8 +258,8 @@
                             </svg>
                         </div>
                         <h3 data-i18n="f7.title">Ícones da Steam corrigidos</h3>
-                        <p data-i18n="f7.desc">Detecta atalhos da Steam com ícones inválidos e baixa o ícone correto
-                            automaticamente a partir do ID do jogo na CDN da Steam.</p>
+                        <p data-i18n="f7.desc">Detecta atalhos da Steam com ícones faltando ou de baixa resolução e
+                            baixa o ícone correto automaticamente a partir do ID do jogo na CDN da Steam.</p>
                     </article>
                 </div>
             </div>
@@ -381,23 +362,19 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install
                         <div class="step__num"></div>
                         <h3 data-i18n="s1.title">Escolha onde criar</h3>
                         <p data-i18n="s1.desc">O instalador pergunta: <strong>1</strong> Área de trabalho,
-                            <strong>2</strong> Menu de aplicativos ou <strong>3</strong> Ambos.
-                        </p>
+                            <strong>2</strong> Menu de aplicativos ou <strong>3</strong> Ambos.</p>
                     </div>
                     <div class="step">
                         <div class="step__num"></div>
-                        <h3 data-i18n="s2.title">Script salvo localmente</h3>
-                        <p data-i18n="s2.desc">O <code>cleaner.sh</code> é salvo em
-                            <code>~/.local/share/BigLinuxCleaner/</code>. O ícone oficial vai para
-                            <code>~/.local/share/icons/</code> e o atalho <code>.desktop</code> é criado apontando para
-                            o script local.
-                        </p>
+                        <h3 data-i18n="s2.title">Ícone e atalho instalados</h3>
+                        <p data-i18n="s2.desc">O ícone oficial vai para <code>~/.local/share/icons/</code> e o atalho
+                            <code>.desktop</code> é criado com o comando do cleaner.</p>
                     </div>
                     <div class="step">
                         <div class="step__num"></div>
                         <h3 data-i18n="s3.title">Pronto! É só clicar</h3>
-                        <p data-i18n="s3.desc">Cada clique no atalho executa a limpeza. Se online, o script se
-                            auto-atualiza antes de rodar.</p>
+                        <p data-i18n="s3.desc">Cada clique no atalho executa a limpeza completa e atualiza o menu do KDE
+                            Plasma automaticamente.</p>
                     </div>
                 </div>
 
@@ -410,8 +387,7 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install
                         </svg>
                         <span data-i18n="inst.cmd2.t">Remover o atalho depois</span>
                     </div>
-                    <p class="cmd-block__desc" data-i18n="inst.cmd2.desc">Se quiser desinstalar o atalho, o ícone e o
-                        script local, use
+                    <p class="cmd-block__desc" data-i18n="inst.cmd2.desc">Se quiser desinstalar o atalho e o ícone, use
                         a flag <code>--uninstall</code>.</p>
                     <div class="code">
                         <pre><span class="p">$</span> curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash -s -- --uninstall</pre>
@@ -515,33 +491,10 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install
                     <details class="faq__item">
                         <summary data-i18n="faq.8.q">E se os ícones dos jogos da Steam estiverem quebrados?</summary>
                         <div class="faq__body" data-i18n="faq.8.a">
-                            O script detecta atalhos da Steam com ícones inválidos (arquivo inexistente ou tema não
-                            encontrado), extrai o ID do jogo da URL <code>steam://rungameid/{id}</code> e baixa o
-                            ícone correto automaticamente da CDN da Steam. Os ícones são salvos em
-                            <code>~/.local/share/icons/steam-games/</code> e os atalhos são atualizados.
-                        </div>
-                    </details>
-
-                    <details class="faq__item">
-                        <summary data-i18n="faq.9.q">O script funciona offline?</summary>
-                        <div class="faq__body" data-i18n="faq.9.a">
-                            Sim! Depois de instalado via <code>install.sh</code>, o <code>cleaner.sh</code> fica salvo
-                            em
-                            <code>~/.local/share/BigLinuxCleaner/</code>. Se a máquina estiver offline, o script executa
-                            a versão em cache automaticamente, pulando o download de ícones da Steam. Se estiver online,
-                            ele tenta baixar a versão mais recente do GitHub antes de rodar.
-                        </div>
-                    </details>
-
-                    <details class="faq__item">
-                        <summary data-i18n="faq.10.q">Como funciona a auto-atualização?</summary>
-                        <div class="faq__body" data-i18n="faq.10.a">
-                            Ao ser executado, o script verifica a conectividade (via <code>ping</code>). Se online,
-                            baixa
-                            a versão mais recente do GitHub para <code>~/.local/share/BigLinuxCleaner/cleaner.sh</code>,
-                            substitui a versão antiga e reinicia automaticamente. Se offline, segue com a versão local
-                            sem
-                            erros.
+                            O script detecta atalhos da Steam com ícones inválidos (arquivo inexistente, vazio ou com
+                            resolução insuficiente), extrai o ID do jogo da URL <code>steam://rungameid/{id}</code> e
+                            baixa o ícone correto automaticamente da CDN da Steam. Os ícones são instalados no tema
+                            hicolor como <code>steam_icon_{id}</code> e os atalhos são atualizados.
                         </div>
                     </details>
                 </div>
