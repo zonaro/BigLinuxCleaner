@@ -534,7 +534,7 @@ section {
 /* Grid de cards de recursos */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 22px;
 }
 
@@ -931,6 +931,10 @@ section {
         grid-template-columns: 1fr;
         gap: 40px;
         padding-bottom: 80px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
     }
 
     .section {
