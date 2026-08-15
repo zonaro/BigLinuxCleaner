@@ -2,13 +2,15 @@
 #
 # install.sh — Instala o BigLinuxCleaner como atalho (.desktop) no sistema.
 #
-# Cria um atalho (Área de trabalho e/ou Menu de aplicativos) que abre o
-# terminal padrão do usuário e executa o cleaner.sh direto do GitHub, além de
-# instalar o ícone oficial em PNG (256/128/64 px).
+# Instala uma cópia local do cleaner.sh em ~/.local/share/BigLinuxCleaner/
+# e cria um atalho (Área de trabalho e/ou Menu de aplicativos) que executa
+# o script local. Se online, o cleaner tenta se auto-atualizar a cada
+# execução. Se offline, roda a versão em cache sem tentar baixar ícones
+# da Steam. Também instala o ícone oficial em PNG (256/128/64 px).
 #
 # Uso:
 #   ./install.sh              Instala (pergunta onde criar o atalho)
-#   ./install.sh --uninstall  Remove o atalho e o ícone instalados
+#   ./install.sh --uninstall  Remove o atalho, ícone e script local
 #
 # Também pode ser executado direto do GitHub:
 #   curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash
@@ -22,6 +24,10 @@ ICON_URL="$RAW_BASE/icon.svg"
 DESKTOP_ID="biglinuxcleaner.desktop"
 ICON_NAME="biglinuxcleaner"
 ICON_SIZES=(256 128 64)
+
+# Diretório local para instalação do script
+LOCAL_INSTALL_DIR="$HOME/.local/share/BigLinuxCleaner"
+LOCAL_CLEANER="$LOCAL_INSTALL_DIR/cleaner.sh"
 
 MENU_DIR="$HOME/.local/share/applications"
 HICOLOR_DIR="$HOME/.local/share/icons/hicolor"
@@ -128,7 +134,7 @@ Version=1.0
 Name=BigLinuxCleaner
 GenericName=Limpeza do sistema
 Comment=Limpa atalhos quebrados, órfãos do pacman/flatpak/snap e o cache do KDE Plasma
-Exec=${term} ${term_args} "curl -fsSL ${CLEANER_URL} | bash; echo; read -rp \"Pressione Enter para fechar...\""
+Exec=${term} ${term_args} "bash ${LOCAL_CLEANER}; echo; read -rp \"Pressione Enter para fechar...\""
 Icon=${ICON_NAME}
 ${desktop_term}
 Categories=System;
@@ -218,6 +224,37 @@ install_icon() {
     refresh_icon_cache
 }
 
+# Instala o cleaner.sh localmente para funcionamento offline
+install_cleaner_local() {
+    log_info "Instalando script local do BigLinuxCleaner..."
+    mkdir -p "$LOCAL_INSTALL_DIR"
+
+    # Tenta baixar a versão mais recente
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL --max-time 10 "$CLEANER_URL" -o "$LOCAL_CLEANER.tmp" 2>/dev/null; then
+            if head -n 1 "$LOCAL_CLEANER.tmp" | grep -q '^#!/bin/bash'; then
+                mv "$LOCAL_CLEANER.tmp" "$LOCAL_CLEANER"
+                chmod +x "$LOCAL_CLEANER"
+                log_ok "Script atualizado via GitHub."
+                return 0
+            fi
+            rm -f "$LOCAL_CLEANER.tmp"
+        fi
+    fi
+
+    # Fallback: copia o script local se existir (caso offline)
+    if [[ -f "./cleaner.sh" ]]; then
+        cp "./cleaner.sh" "$LOCAL_CLEANER"
+        chmod +x "$LOCAL_CLEANER"
+        log_ok "Script instalado localmente (cópia do diretório atual)."
+    elif [[ -f "$LOCAL_CLEANER" ]]; then
+        log_warn "Mantendo versão local existente (sem conexão)."
+    else
+        log_err "Não foi possível instalar o script. Execute no diretório do repositório."
+        return 1
+    fi
+}
+
 write_desktop() {
     local target="$1"
     mkdir -p "$(dirname "$target")"
@@ -229,6 +266,7 @@ write_desktop() {
 install_shortcut() {
     local install_menu="$1" install_desktop="$2"
 
+    install_cleaner_local || return 1
     install_icon || return 1
 
     if [[ "$install_menu" == 1 ]]; then
@@ -278,11 +316,17 @@ uninstall() {
         rm -f "$SVG_ICON_DIR/$ICON_NAME.svg" && ((removed += 1))
     fi
 
+    # Remove o script local
+    if [[ -d "$LOCAL_INSTALL_DIR" ]]; then
+        rm -rf "$LOCAL_INSTALL_DIR" && ((removed += 1))
+        log_info "Script local removido de $LOCAL_INSTALL_DIR"
+    fi
+
     refresh_menu
     refresh_icon_cache
 
     if ((removed > 0)); then
-        log_ok "Atalho e ícone do BigLinuxCleaner removidos."
+        log_ok "Atalho, ícone e script do BigLinuxCleaner removidos."
     else
         log_warn "Nada para remover — o BigLinuxCleaner não estava instalado."
     fi

@@ -4,6 +4,11 @@
 
 set -Eeuo pipefail
 
+# --- Configuração e Constantes ---
+RAW_BASE="https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main"
+REMOTE_URL="$RAW_BASE/cleaner.sh"
+LOCAL_SCRIPT="$HOME/.local/share/BigLinuxCleaner/cleaner.sh"
+
 # Cores
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -26,11 +31,59 @@ INVALID=0
 REMOVED=0
 FAILED=0
 STEAM_FIXED=0
+OFFLINE_MODE=0
 
 log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
 log_ok() { echo -e "${GREEN}[OK]${NC} $*"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 log_err() { echo -e "${RED}[ERRO]${NC} $*"; }
+
+# Verifica se o sistema está online
+check_connectivity() {
+    if ping -c 1 -W 2 google.com >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+# Tenta atualizar o script local a partir do GitHub
+try_update_script() {
+    if [[ -z "${1:-}" ]]; then
+        log_info "Verificando atualizações..."
+    fi
+
+    if ! check_connectivity; then
+        log_warn "Sem conexão com a internet. Executando versão local."
+        OFFLINE_MODE=1
+        return 1
+    fi
+
+    log_info "Baixando a versão mais recente do BigLinuxCleaner..."
+    local tmp_script
+    tmp_script=$(mktemp)
+    
+    if curl -fsSL --max-time 10 "$REMOTE_URL" -o "$tmp_script" 2>/dev/null; then
+        # Verifica se o script baixado é válido
+        if head -n 1 "$tmp_script" | grep -q '^#!/bin/bash'; then
+            mkdir -p "$(dirname "$LOCAL_SCRIPT")"
+            if mv "$tmp_script" "$LOCAL_SCRIPT" 2>/dev/null; then
+                chmod +x "$LOCAL_SCRIPT"
+                log_ok "Script atualizado com sucesso!"
+                
+                # Se não foi chamado via argumento, reinicia com a nova versão
+                if [[ "${1:-}" != "--no-reexec" ]]; then
+                    log_info "Reiniciando com a versão atualizada..."
+                    exec bash "$LOCAL_SCRIPT" "--no-reexec"
+                fi
+                return 0
+            fi
+        fi
+        rm -f "$tmp_script"
+    fi
+    
+    log_warn "Não foi possível atualizar. Usando versão local."
+    return 1
+}
 
 trap 'log_err "Falha na linha ${LINENO}. Abortando."' ERR
 
@@ -315,6 +368,12 @@ fix_steam_shortcut_icons() {
         return
     fi
 
+    # Se estiver offline, pula o download de novos ícones
+    if [[ "$OFFLINE_MODE" -eq 1 ]]; then
+        log_warn "Modo offline: pulando download de ícones da Steam."
+        return
+    fi
+
     log_info "--- Corrigindo ícones de atalhos da Steam ---"
 
     mkdir -p "$steam_icon_dir"
@@ -503,6 +562,9 @@ show_summary() {
 }
 
 main() {
+    # Verifica atualização no início da execução (se online)
+    try_update_script
+    
     prepare_sudo
     teste_and_remove_flatpak
     teste_and_remove_snap
@@ -514,4 +576,15 @@ main() {
     show_summary
 }
 
-main
+# Se estiver rodando como o script local, tenta atualizar
+if [[ "${BASH_SOURCE[0]}" == "$0" ]] || [[ -z "${BASH_SOURCE[0]}" ]]; then
+    # Se não existir localmente, cria o diretório e salva
+    if [[ -n "$LOCAL_SCRIPT" ]] && [[ ! -f "$LOCAL_SCRIPT" ]]; then
+        mkdir -p "$(dirname "$LOCAL_SCRIPT")"
+        if [[ -f "$0" ]]; then
+            cp "$0" "$LOCAL_SCRIPT"
+            chmod +x "$LOCAL_SCRIPT"
+        fi
+    fi
+    main
+fi
