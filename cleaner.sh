@@ -48,9 +48,12 @@ check_connectivity() {
 
 # Tenta atualizar o script local a partir do GitHub
 try_update_script() {
-    if [[ -z "${1:-}" ]]; then
-        log_info "Verificando atualizações..."
+    # Se já estamos na versão re-executada, não tenta atualizar de novo
+    if [[ "${1:-}" == "--no-reexec" ]]; then
+        return 0
     fi
+
+    log_info "Verificando atualizações..."
 
     if ! check_connectivity; then
         log_warn "Sem conexão com a internet. Executando versão local."
@@ -65,17 +68,19 @@ try_update_script() {
     if curl -fsSL --max-time 10 "$REMOTE_URL" -o "$tmp_script" 2>/dev/null; then
         # Verifica se o script baixado é válido
         if head -n 1 "$tmp_script" | grep -q '^#!/bin/bash'; then
+            # Compara com a versão local para evitar reinstalação desnecessária
+            if [[ -f "$LOCAL_SCRIPT" ]] && diff -q "$tmp_script" "$LOCAL_SCRIPT" >/dev/null 2>&1; then
+                rm -f "$tmp_script"
+                log_ok "Script já está atualizado."
+                return 0
+            fi
+
             mkdir -p "$(dirname "$LOCAL_SCRIPT")"
             if mv "$tmp_script" "$LOCAL_SCRIPT" 2>/dev/null; then
                 chmod +x "$LOCAL_SCRIPT"
                 log_ok "Script atualizado com sucesso!"
-                
-                # Se não foi chamado via argumento, reinicia com a nova versão
-                if [[ "${1:-}" != "--no-reexec" ]]; then
-                    log_info "Reiniciando com a versão atualizada..."
-                    exec bash "$LOCAL_SCRIPT" "--no-reexec"
-                fi
-                return 0
+                log_info "Reiniciando com a versão atualizada..."
+                exec bash "$LOCAL_SCRIPT" "--no-reexec"
             fi
         fi
         rm -f "$tmp_script"
