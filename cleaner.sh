@@ -308,10 +308,33 @@ is_icon_valid() {
     (( px >= min_size ))
 }
 
+# Baixa a imagem do jogo da CDN da Steam, tentando formatos por prioridade:
+# capa vertical HD (600x900) → capa vertical (300x450) → header (460x215).
+# A capa vertical é preferida porque permite gerar um ícone quadrado bonito
+# cortando o centro. Retorna 0 em caso de sucesso.
+download_steam_image() {
+    local game_id="$1"
+    local dest="$2"
+    local cdn url
+
+    for cdn in "cdn.akamai.steamstatic.com" "cdn.cloudflare.steamstatic.com"; do
+        for url in \
+            "https://${cdn}/steam/apps/${game_id}/library_600x900_2x.jpg" \
+            "https://${cdn}/steam/apps/${game_id}/library_600x900.jpg" \
+            "https://${cdn}/steam/apps/${game_id}/header.jpg"; do
+            if curl -fsSL --max-time 10 "$url" -o "$dest" 2>/dev/null && [[ -s "$dest" ]]; then
+                return 0
+            fi
+        done
+    done
+
+    return 1
+}
+
 # Corrige ícones de atalhos da Steam que estão faltando ou com resolução
-# insuficiente. Baixa o header.jpg do jogo a partir do game ID na URL
-# steam://rungameid/{id}, converte para PNG 256x256 e instala no tema hicolor
-# como steam_icon_{id} (padrão da Steam).
+# insuficiente. Baixa a capa vertical do jogo a partir do game ID na URL
+# steam://rungameid/{id}, corta o centro em um quadrado 256x256 e instala no
+# tema hicolor como steam_icon_{id} (padrão da Steam).
 fix_steam_shortcut_icons() {
     local dir file exec_line icon_line icon_value game_id
     local hicolor_256="$HOME/.local/share/icons/hicolor/256x256/apps"
@@ -348,7 +371,11 @@ fix_steam_shortcut_icons() {
             icon_line="$(grep -m 1 '^Icon=' "$file" 2>/dev/null || true)"
             icon_value="${icon_line#Icon=}"
 
-            if is_icon_valid "$icon_value" 128; then
+            # Marker indica que o ícone foi gerado pela versão atual (quadrado).
+            # Ícones de versões antigas (banner esticado) são refeitos.
+            local marker="$tmp_dir/${game_id}.square"
+
+            if is_icon_valid "$icon_value" 128 && [[ -f "$marker" ]]; then
                 continue
             fi
 
@@ -361,45 +388,38 @@ fix_steam_shortcut_icons() {
             local final_icon=""
             local theme_icon="$hicolor_256/steam_icon_${game_id}.png"
 
-            # Se já corrigimos antes, não baixa de novo.
-            if [[ -s "$theme_icon" ]]; then
+            # Se já corrigimos antes (versão quadrada), não baixa de novo.
+            if [[ -s "$theme_icon" && -f "$marker" ]]; then
                 final_icon="$theme_icon"
             else
-                # Baixa o header do jogo da CDN da Steam.
-                local header_url="https://cdn.akamai.steamstatic.com/steam/apps/${game_id}/header.jpg"
-                local tmp_header="$tmp_dir/${game_id}_tmp.jpg"
+                local tmp_img="$tmp_dir/${game_id}_tmp.img"
 
                 log_info "Baixando ícone do jogo (Steam AppID: $game_id)..."
-                if ! curl -fsSL --max-time 10 "$header_url" -o "$tmp_header" 2>/dev/null; then
-                    # Tenta o fallback via Cloudflare.
-                    header_url="https://cdn.cloudflare.steamstatic.com/steam/apps/${game_id}/header.jpg"
-                    curl -fsSL --max-time 10 "$header_url" -o "$tmp_header" 2>/dev/null || true
-                fi
-
-                if [[ ! -s "$tmp_header" ]]; then
+                if ! download_steam_image "$game_id" "$tmp_img"; then
                     log_err "Falha ao baixar ícone do jogo $game_id — pulando."
-                    rm -f "$tmp_header"
+                    rm -f "$tmp_img"
                     continue
                 fi
 
                 if ((has_convert)); then
-                    # Converte para PNG 256x256 com fundo transparente.
-                    if convert "$tmp_header" \
+                    # Corta o centro da capa em um quadrado 256x256.
+                    if convert "$tmp_img" \
                         -background none \
                         -gravity center \
-                        -resize 256x256 \
+                        -resize "256x256^" \
                         -extent 256x256 \
                         "$theme_icon" 2>/dev/null; then
                         final_icon="$theme_icon"
+                        touch "$marker"
                     else
                         log_err "Falha ao converter o ícone do jogo $game_id."
-                        rm -f "$tmp_header"
+                        rm -f "$tmp_img"
                         continue
                     fi
-                    rm -f "$tmp_header"
+                    rm -f "$tmp_img"
                 else
-                    # Sem ImageMagick: mantém o header.jpg (460x215) em pasta própria.
-                    mv "$tmp_header" "$tmp_dir/${game_id}.jpg"
+                    # Sem ImageMagick: usa a imagem baixada direto (fallback).
+                    mv "$tmp_img" "$tmp_dir/${game_id}.jpg"
                     final_icon="$tmp_dir/${game_id}.jpg"
                 fi
             fi
