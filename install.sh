@@ -13,11 +13,11 @@
 #   ./install.sh --uninstall  Remove o atalho, ícone e script local
 #
 # Também pode ser executado direto do GitHub:
-#   curl -fsSL https://cdn.jsdelivr.net/gh/zonaro/BigLinuxCleaner@main/install.sh | bash
+# curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash
 
 set -uo pipefail
 
-RAW_BASE="https://cdn.jsdelivr.net/gh/zonaro/BigLinuxCleaner@main"
+RAW_BASE="https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main"
 CLEANER_URL="$RAW_BASE/cleaner.sh"
 ICON_URL="$RAW_BASE/icon.svg"
 
