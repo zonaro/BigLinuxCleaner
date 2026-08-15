@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash
+# curl -fsSL https://cdn.jsdelivr.net/gh/zonaro/BigLinuxCleaner@main/cleaner.sh | bash
 
 set -Eeuo pipefail
 
 # --- Configuração e Constantes ---
-RAW_BASE="https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main"
+RAW_BASE="https://cdn.jsdelivr.net/gh/zonaro/BigLinuxCleaner@main"
 REMOTE_URL="$RAW_BASE/cleaner.sh"
 LOCAL_SCRIPT="$HOME/.local/share/BigLinuxCleaner/cleaner.sh"
 

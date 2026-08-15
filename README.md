@@ -16,7 +16,7 @@ Script Bash para limpeza e manutenção do **Big Linux** (e outros sistemas base
 Execute o script diretamente no terminal sem precisar clonar o repositório:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/zonaro/BigLinuxCleaner@main/cleaner.sh | bash
 ```
 
 > **Atenção:** sempre inspecione scripts antes de executá-los com privilégios. Você pode visualizar o conteúdo completo em [`cleaner.sh`](./cleaner.sh).
@@ -30,7 +30,7 @@ Crie um atalho no seu ambiente (área de trabalho e/ou menu de aplicativos) que 
 ./install.sh
 
 # Ou diretamente do GitHub
-curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/zonaro/BigLinuxCleaner@main/install.sh | bash
 ```
 
 O instalador pergunta onde você quer o atalho (**Área de trabalho**, **Menu de aplicativos** ou **ambos**), instala o ícone oficial (PNG em múltiplos tamanhos: 256/128/64 px) e atualiza o menu do KDE Plasma automaticamente.
@@ -49,7 +49,7 @@ O BigLinuxCleaner funciona completamente offline depois de instalado:
 Para remover o atalho, o ícone e o script local:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash -s -- --uninstall
+curl -fsSL https://cdn.jsdelivr.net/gh/zonaro/BigLinuxCleaner@main/install.sh | bash -s -- --uninstall
 ```
 
 ## Uso manual
