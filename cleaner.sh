@@ -582,12 +582,12 @@ main() {
 }
 
 # Se estiver rodando como o script local, tenta atualizar
-if [[ "${BASH_SOURCE[0]}" == "$0" ]] || [[ -z "${BASH_SOURCE[0]}" ]]; then
+if [[ "${BASH_SOURCE[0]:-}" == "$0" ]] || [[ -z "${BASH_SOURCE[0]:-}" ]]; then
     # Se não existir localmente, cria o diretório e salva
     if [[ -n "$LOCAL_SCRIPT" ]] && [[ ! -f "$LOCAL_SCRIPT" ]]; then
         mkdir -p "$(dirname "$LOCAL_SCRIPT")"
-        if [[ -f "$0" ]]; then
-            cp "$0" "$LOCAL_SCRIPT"
+        if [[ -f "${BASH_SOURCE[0]:-}" ]]; then
+            cp "${BASH_SOURCE[0]:-}" "$LOCAL_SCRIPT"
             chmod +x "$LOCAL_SCRIPT"
         fi
     fi
