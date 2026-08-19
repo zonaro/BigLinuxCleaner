@@ -1,0 +1,184 @@
+#!/bin/bash
+#
+# index.sh.html — Página principal da GUI BigLinuxCleaner
+# Executado pelo BigBashView: bash que gera HTML
+#
+
+GUI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
+LIB_DIR="$GUI_DIR/../lib"
+
+# Carrega detecção de DE
+DE_ID="unknown"
+DE_PRETTY="Desconhecido"
+if [[ -f "$LIB_DIR/detect_de.sh" ]]; then
+    source "$LIB_DIR/detect_de.sh"
+    detect_desktop_environment
+    DE_ID="${DESKTOP_ENVIRONMENT:-unknown}"
+    DE_PRETTY="${DESKTOP_ENVIRONMENT_PRETTY:-Desconhecido}"
+fi
+
+# Detecta ferramentas disponíveis para mostrar status
+HAS_PACMAN="no"
+HAS_FLATPAK="no"
+HAS_SNAP="no"
+HAS_CURL="no"
+
+command -v pacman >/dev/null 2>&1 && HAS_PACMAN="yes"
+command -v flatpak >/dev/null 2>&1 && HAS_FLATPAK="yes"
+command -v snap >/dev/null 2>&1 && HAS_SNAP="yes"
+command -v curl >/dev/null 2>&1 && HAS_CURL="yes"
+
+# Coleta informações do sistema
+ORPHAN_COUNT=0
+if [[ "$HAS_PACMAN" == "yes" ]]; then
+    ORPHAN_COUNT=$(pacman -Qtdq 2>/dev/null | wc -l || echo "0")
+    ORPHAN_COUNT=$(echo "$ORPHAN_COUNT" | tr -d ' ')
+fi
+
+echo "
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>BigLinuxCleaner</title>
+    <link rel=\"stylesheet\" href=\"css/style.css\">
+</head>
+<body>
+
+    <!-- Header -->
+    <header class=\"app-header\">
+        <img class=\"logo\" src=\"$GUI_DIR/../icon-256.png\" alt=\"BigLinuxCleaner\"
+             onerror=\"this.style.display='none'\">
+        <div class=\"title-group\">
+            <h1>BigLinuxCleaner</h1>
+            <div class=\"subtitle\">Limpeza e manutenção do sistema</div>
+        </div>
+        <div class=\"de-badge\">
+            <span class=\"dot\"></span>
+            $DE_PRETTY
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class=\"app-content\">
+        <form id=\"cleanup-form\" action=\"execute\$$GUI_DIR/run_cleanup.sh\" method=\"POST\" onsubmit=\"return handleSubmit(this)\">
+
+            <!-- Select All -->
+            <div style=\"display:flex;justify-content:flex-end;margin-bottom:4px;\">
+                <button type=\"button\" class=\"btn-select-all\" id=\"btn-select-all\">Selecionar todas</button>
+            </div>
+
+            <!-- Task Grid -->
+            <div class=\"section\">
+                <div class=\"task-grid\">
+
+                    <!-- Pacotes órfãos -->
+                    <label class=\"task-card selected\" for=\"task-orphans\">
+                        <input type=\"checkbox\" name=\"task_orphans\" id=\"task-orphans\" value=\"1\" checked>
+                        <span class=\"task-check\"></span>
+                        <div class=\"task-info\">
+                            <div class=\"task-name\">Pacotes órfãos</div>
+                            <div class=\"task-desc\">Remove dependências do pacman não mais necessárias"
+if [[ "$ORPHAN_COUNT" -gt 0 ]]; then
+    echo " <strong style=\"color:var(--accent-yellow)\">($ORPHAN_COUNT encontrados)</strong>"
+fi
+echo "</div>
+                        </div>
+                        <span class=\"task-icon\">📦</span>
+                    </label>
+
+                    <!-- Atalhos quebrados -->
+                    <label class=\"task-card selected\" for=\"task-shortcuts\">
+                        <input type=\"checkbox\" name=\"task_shortcuts\" id=\"task-shortcuts\" value=\"1\" checked>
+                        <span class=\"task-check\"></span>
+                        <div class=\"task-info\">
+                            <div class=\"task-name\">Atalhos quebrados</div>
+                            <div class=\"task-desc\">Remove .desktop com Exec inválido do menu</div>
+                        </div>
+                        <span class=\"task-icon\">🔗</span>
+                    </label>
+
+                    <!-- Ícones Steam -->
+                    <label class=\"task-card selected\" for=\"task-steam\">
+                        <input type=\"checkbox\" name=\"task_steam\" id=\"task-steam\" value=\"1\" checked>
+                        <span class=\"task-check\"></span>
+                        <div class=\"task-info\">
+                            <div class=\"task-name\">Ícones da Steam</div>
+                            <div class=\"task-desc\">Baixa e corrige ícones de jogos faltando</div>
+                        </div>
+                        <span class=\"task-icon\">🎮</span>
+                    </label>
+
+                    <!-- Flatpak órfãos -->
+                    <label class=\"task-card\" for=\"task-flatpak-orphan\">
+                        <input type=\"checkbox\" name=\"task_flatpak_orphan\" id=\"task-flatpak-orphan\" value=\"1\"
+                               $([ \"$HAS_FLATPAK\" == \"no\" ] && echo 'disabled')>
+                        <span class=\"task-check\"></span>
+                        <div class=\"task-info\">
+                            <div class=\"task-name\">Atalhos Flatpak</div>
+                            <div class=\"task-desc\">Remove .desktop de apps Flatpak desinstalados</div>
+                        </div>
+                        <span class=\"task-icon\">📦</span>
+                    </label>
+
+                    <!-- Snap órfãos -->
+                    <label class=\"task-card\" for=\"task-snap-orphan\">
+                        <input type=\"checkbox\" name=\"task_snap_orphan\" id=\"task-snap-orphan\" value=\"1\"
+                               $([ \"$HAS_SNAP\" == \"no\" ] && echo 'disabled')>
+                        <span class=\"task-check\"></span>
+                        <div class=\"task-info\">
+                            <div class=\"task-name\">Atalhos Snap</div>
+                            <div class=\"task-desc\">Remove .desktop de apps Snap desinstalados</div>
+                        </div>
+                        <span class=\"task-icon\">📦</span>
+                    </label>
+
+                    <!-- Cache Flatpak/Snap -->
+                    <label class=\"task-card\" for=\"task-cache\">
+                        <input type=\"checkbox\" name=\"task_cache\" id=\"task-cache\" value=\"1\">
+                        <span class=\"task-check\"></span>
+                        <div class=\"task-info\">
+                            <div class=\"task-name\">Cache Flatpak/Snap</div>
+                            <div class=\"task-desc\">Limpa caches e runtimes não utilizados</div>
+                        </div>
+                        <span class=\"task-icon\">🗑️</span>
+                    </label>
+
+                    <!-- Refresh do DE -->
+                    <label class=\"task-card selected\" for=\"task-refresh\">
+                        <input type=\"checkbox\" name=\"task_refresh\" id=\"task-refresh\" value=\"1\" checked>
+                        <span class=\"task-check\"></span>
+                        <div class=\"task-info\">
+                            <div class=\"task-name\">Atualizar menu</div>
+                            <div class=\"task-desc\">Atualiza cache e menu do $DE_PRETTY</div>
+                        </div>
+                        <span class=\"task-icon\">🔄</span>
+                    </label>
+
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class=\"action-bar\">
+                <div class=\"task-count\" id=\"task-count\">
+                    <strong>4</strong> de 7 tarefas selecionadas
+                </div>
+                <button type=\"submit\" class=\"btn btn-primary\" id=\"btn-run\">
+                    <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"13 17 18 12 13 7\"></polyline><polyline points=\"6 17 11 12 6 7\"></polyline></svg>
+                    Iniciar Limpeza
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class=\"app-footer\">
+        BigLinuxCleaner v2.0 · <a href=\"https://github.com/zonaro/BigLinuxCleaner\" target=\"_blank\">GitHub</a> ·
+        Big Linux / BigCommunity
+    </footer>
+
+    <script src=\"js/app.js\"></script>
+</body>
+</html>
+"

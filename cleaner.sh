@@ -1,17 +1,23 @@
 #!/bin/bash
 
 # curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash
+# BigLinuxCleaner — Limpeza e manutenção para Big Linux / BigCommunity (KDE, GNOME, XFCE, Cinnamon)
 
 set -Eeuo pipefail
 
-# Cores
+# ─── Carrega bibliotecas ───
+LIB_DIR="$(dirname "${BASH_SOURCE[0]:-}")/lib"
+source "$LIB_DIR/detect_de.sh"
+source "$LIB_DIR/refresh_de.sh"
+
+# ─── Cores ───
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Diretórios para verificar (Sistema, Usuário, Flatpak e Snap)
+# ─── Diretórios para verificar .desktop (Sistema, Usuário, Flatpak, Snap) ───
 DIRS=(
     "$HOME/.local/share/applications"
     "/usr/share/applications"
@@ -21,19 +27,22 @@ DIRS=(
     "/var/lib/snapd/desktop/applications"
 )
 
+# ─── Contadores ───
 SCANNED=0
 INVALID=0
 REMOVED=0
 FAILED=0
 STEAM_FIXED=0
 
+# ─── Logging ───
 log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
-log_ok() { echo -e "${GREEN}[OK]${NC} $*"; }
+log_ok()   { echo -e "${GREEN}[OK]${NC} $*"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_err() { echo -e "${RED}[ERRO]${NC} $*"; }
+log_err()  { echo -e "${RED}[ERRO]${NC} $*"; }
 
 trap 'log_err "Falha na linha ${LINENO}. Abortando."' ERR
 
+# ─── Utilitários ───
 need_sudo() {
     local d
     for d in "${DIRS[@]}"; do
@@ -54,6 +63,7 @@ prepare_sudo() {
     fi
 }
 
+# ─── Limpeza de pacotes órfãos (pacman) ───
 cleanup_orphans() {
     if ! command -v pacman >/dev/null 2>&1; then
         log_warn "pacman não encontrado; limpeza de órfãos ignorada."
@@ -72,7 +82,8 @@ cleanup_orphans() {
     log_ok "Pacotes órfãos removidos: ${#orphans[@]}"
 }
 
-teste_and_remove_flatpak() {
+# ─── Remove atalhos Flatpak órfãos ───
+remove_flatpak_orphans() {
     local file app_name app_id
     local -A installed_apps=()
 
@@ -113,6 +124,7 @@ teste_and_remove_flatpak() {
     )
 }
 
+# ─── Extrai nome do Snap do .desktop ───
 extract_snap_name_from_desktop() {
     local file="$1"
     local snap_name base
@@ -140,7 +152,8 @@ extract_snap_name_from_desktop() {
     echo "$base"
 }
 
-teste_and_remove_snap() {
+# ─── Remove atalhos Snap órfãos ───
+remove_snap_orphans() {
     local file app_name snap_name
     local -A installed_snaps=()
 
@@ -177,51 +190,43 @@ teste_and_remove_snap() {
     done < <(find "/var/lib/snapd/desktop/applications" -type f -name '*.desktop' -print0 2>/dev/null)
 }
 
+# ─── Limpa cache Flatpak/Snap ───
 cleanup_flatpak_snap_cache() {
     local snap_line snap_name snap_rev
 
     log_info "Limpando cache e resíduos do Flatpak/Snap..."
 
     if command -v flatpak >/dev/null 2>&1; then
-        # Remove runtimes/pacotes sem uso que costumam ficar como resíduo.
         flatpak uninstall --unused -y >/dev/null 2>&1 || true
-
-        # Limpa cache local do Flatpak do usuário.
         rm -rf "$HOME/.cache/flatpak"/* 2>/dev/null || true
-
-        # Limpa cache global do Flatpak quando houver permissão.
         if command -v sudo >/dev/null 2>&1; then
             sudo rm -rf /var/tmp/flatpak-cache/* 2>/dev/null || true
         fi
-
         log_ok "Limpeza do Flatpak concluída."
     else
         log_warn "flatpak não encontrado; limpeza do Flatpak ignorada."
     fi
 
     if command -v snap >/dev/null 2>&1; then
-        # Remove revisões desabilitadas para recuperar espaço.
         while IFS= read -r snap_line; do
             [[ -n "$snap_line" ]] || continue
             snap_name="$(awk '{print $1}' <<<"$snap_line")"
             snap_rev="$(awk '{print $2}' <<<"$snap_line")"
-
             if [[ -n "$snap_name" && -n "$snap_rev" ]]; then
                 sudo snap remove "$snap_name" --revision="$snap_rev" >/dev/null 2>&1 || true
             fi
         done < <(snap list --all 2>/dev/null | awk '/disabled/{print $1, $3}')
 
-        # Limpa arquivos .snap em cache local do daemon.
         if command -v sudo >/dev/null 2>&1; then
             sudo rm -f /var/lib/snapd/cache/*.snap 2>/dev/null || true
         fi
-
         log_ok "Limpeza do Snap concluída."
     else
         log_warn "snap não encontrado; limpeza do Snap ignorada."
     fi
 }
 
+# ─── Extrai binário do Exec= ───
 extract_exec_bin() {
     local line="$1"
     local cmd
@@ -241,6 +246,7 @@ extract_exec_bin() {
     echo "${cmd%%[[:space:]]*}"
 }
 
+# ─── Verifica se executável é válido ───
 is_exec_valid() {
     local exec_bin="$1"
     if [[ -z "$exec_bin" ]]; then
@@ -255,6 +261,7 @@ is_exec_valid() {
     command -v "$exec_bin" >/dev/null 2>&1
 }
 
+# ─── Remove arquivo .desktop ───
 remove_desktop_file() {
     local file="$1"
 
@@ -271,9 +278,7 @@ remove_desktop_file() {
     return 1
 }
 
-# Verifica se o ícone de um .desktop é válido: arquivo existente, não vazio e
-# com resolução mínima (quando exigida). Retorna 0 (true) se válido, 1 caso
-# contrário.
+# ─── Verifica validade do ícone ───
 is_icon_valid() {
     local icon_value="$1"
     local min_size="${2:-0}"
@@ -281,14 +286,11 @@ is_icon_valid() {
 
     [[ -z "$icon_value" ]] && return 1
 
-    # Caminho absoluto ou relativo — verifica se o arquivo existe e não é vazio.
     if [[ "$icon_value" == /* ]]; then
         [[ -s "$icon_value" ]] && return 0
         return 1
     fi
 
-    # Nome de tema (ex.: steam_icon_730) — procura o maior tamanho disponível
-    # no hicolor (usuário primeiro, depois sistema).
     for size in 256x256 128x128 64x64 48x48 32x32 16x16 scalable; do
         if [[ -s "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.png" ]] ||
            [[ -s "$HOME/.local/share/icons/hicolor/$size/apps/$icon_value.svg" ]] ||
@@ -300,18 +302,13 @@ is_icon_valid() {
     done
 
     [[ -z "$found" ]] && return 1
-
-    # SVG escalável atende a qualquer resolução.
     [[ "$found" == "scalable" ]] && return 0
 
     px="${found%x*}"
     (( px >= min_size ))
 }
 
-# Baixa a imagem do jogo da CDN da Steam, tentando formatos por prioridade:
-# capa vertical HD (600x900) → capa vertical (300x450) → header (460x215).
-# A capa vertical é preferida porque permite gerar um ícone quadrado bonito
-# cortando o centro. Retorna 0 em caso de sucesso.
+# ─── Baixa imagem da Steam CDN ───
 download_steam_image() {
     local game_id="$1"
     local dest="$2"
@@ -331,10 +328,7 @@ download_steam_image() {
     return 1
 }
 
-# Corrige ícones de atalhos da Steam que estão faltando ou com resolução
-# insuficiente. Baixa a capa vertical do jogo a partir do game ID na URL
-# steam://rungameid/{id}, corta o centro em um quadrado 256x256 e instala no
-# tema hicolor como steam_icon_{id} (padrão da Steam).
+# ─── Corrige ícones da Steam ───
 fix_steam_shortcut_icons() {
     local dir file exec_line icon_line icon_value game_id
     local hicolor_256="$HOME/.local/share/icons/hicolor/256x256/apps"
@@ -360,19 +354,15 @@ fix_steam_shortcut_icons() {
         while IFS= read -r -d '' file; do
             exec_line="$(grep -m 1 '^Exec=' "$file" 2>/dev/null || true)"
 
-            # Detecta atalhos da Steam via steam://rungameid/{id}.
             if [[ ! "$exec_line" =~ steam://rungameid/([0-9]+) ]]; then
                 continue
             fi
 
             game_id="${BASH_REMATCH[1]}"
 
-            # Verifica se o ícone atual já é válido (exige resolução mínima).
             icon_line="$(grep -m 1 '^Icon=' "$file" 2>/dev/null || true)"
             icon_value="${icon_line#Icon=}"
 
-            # Marker indica que o ícone foi gerado pela versão atual (quadrado).
-            # Ícones de versões antigas (banner esticado) são refeitos.
             local marker="$tmp_dir/${game_id}.square"
 
             if is_icon_valid "$icon_value" 128 && [[ -f "$marker" ]]; then
@@ -384,11 +374,9 @@ fix_steam_shortcut_icons() {
             echo -e "  Game ID: ${YELLOW}${game_id}${NC}"
             echo -e "  Icon atual: ${icon_value:-vazio}"
 
-            # Caminho final no tema hicolor (padrão da Steam).
             local final_icon=""
             local theme_icon="$hicolor_256/steam_icon_${game_id}.png"
 
-            # Se já corrigimos antes (versão quadrada), não baixa de novo.
             if [[ -s "$theme_icon" && -f "$marker" ]]; then
                 final_icon="$theme_icon"
             else
@@ -402,7 +390,6 @@ fix_steam_shortcut_icons() {
                 fi
 
                 if ((has_convert)); then
-                    # Corta o centro da capa em um quadrado 256x256.
                     if convert "$tmp_img" \
                         -background none \
                         -gravity center \
@@ -418,7 +405,6 @@ fix_steam_shortcut_icons() {
                     fi
                     rm -f "$tmp_img"
                 else
-                    # Sem ImageMagick: usa a imagem baixada direto (fallback).
                     mv "$tmp_img" "$tmp_dir/${game_id}.jpg"
                     final_icon="$tmp_dir/${game_id}.jpg"
                 fi
@@ -429,14 +415,11 @@ fix_steam_shortcut_icons() {
                 continue
             fi
 
-            # Atualiza o campo Icon= no arquivo .desktop.
             if [[ "$final_icon" == "$theme_icon" ]]; then
-                # Usa o nome de tema (padrão da Steam) para o hicolor.
                 if [[ "$icon_value" != "steam_icon_${game_id}" ]]; then
                     sed -i "s|^Icon=.*|Icon=steam_icon_${game_id}|" "$file"
                 fi
             else
-                # Caminho absoluto (fallback sem ImageMagick).
                 sed -i "s|^Icon=.*|Icon=${final_icon}|" "$file"
             fi
 
@@ -447,7 +430,6 @@ fix_steam_shortcut_icons() {
     done
 
     if ((STEAM_FIXED > 0)); then
-        # Atualiza o cache de ícones do tema hicolor.
         if command -v gtk-update-icon-cache >/dev/null 2>&1; then
             gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
         fi
@@ -457,6 +439,7 @@ fix_steam_shortcut_icons() {
     fi
 }
 
+# ─── Varredura e limpeza de atalhos quebrados ───
 scan_and_clean_desktop_entries() {
     local dir file app_name exec_line exec_bin
 
@@ -494,46 +477,12 @@ scan_and_clean_desktop_entries() {
     done
 }
 
-refresh_kde() {
-    log_info "Atualizando cache e menu do KDE Plasma..."
-
-    if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
-    fi
-
-    if command -v kbuildsycoca6 >/dev/null 2>&1; then
-        kbuildsycoca6 --noincremental >/dev/null 2>&1
-    elif command -v kbuildsycoca5 >/dev/null 2>&1; then
-        kbuildsycoca5 --noincremental >/dev/null 2>&1
-    else
-        log_warn "kbuildsycoca não encontrado; atualização de serviços do KDE ignorada."
-    fi
-
-    killall krunner 2>/dev/null || true
-
-    if [[ -f "$HOME/.local/share/krunnerstaterc" ]]; then
-        rm -f "$HOME/.local/share/krunnerstaterc"
-    fi
-
-    if command -v kwriteconfig6 >/dev/null 2>&1; then
-        kwriteconfig6 --file krunnerrc --group General --key PastQueries "[]" >/dev/null 2>&1 || true
-    elif command -v kwriteconfig5 >/dev/null 2>&1; then
-        kwriteconfig5 --file krunnerrc --group General --key PastQueries "[]" >/dev/null 2>&1 || true
-    fi
-
-    rm -rf "$HOME/.cache/krunner"/* 2>/dev/null || true
-    rm -rf "$HOME/.cache/plasmashell"* 2>/dev/null || true
-    rm -f "$HOME/.cache/org.kde.dirmodel-cache.kcache" 2>/dev/null || true
-
-    if pgrep -x plasmashell >/dev/null 2>&1; then
-        killall plasmashell 2>/dev/null || true
-        nohup plasmashell >/dev/null 2>&1 &
-    fi
-
-    nohup krunner >/dev/null 2>&1 &
-    log_ok "KRunner e cache do Plasma atualizados."
+# ─── Refresh universal do Desktop Environment ───
+refresh_desktop() {
+    refresh_desktop_environment
 }
 
+# ─── Resumo final ───
 show_summary() {
     echo
     log_info "--- Resumo ---"
@@ -546,15 +495,20 @@ show_summary() {
     log_ok "Processo finalizado."
 }
 
+# ─── Main ───
 main() {
+    # Detecta DE no início
+    detect_desktop_environment
+    log_info "BigLinuxCleaner iniciado no ${DESKTOP_ENVIRONMENT_PRETTY} (${DESKTOP_ENVIRONMENT})"
+
     prepare_sudo
-    teste_and_remove_flatpak
-    teste_and_remove_snap
+    remove_flatpak_orphans
+    remove_snap_orphans
     cleanup_orphans
     cleanup_flatpak_snap_cache
     fix_steam_shortcut_icons
     scan_and_clean_desktop_entries
-    refresh_kde
+    refresh_desktop
     show_summary
 }
 

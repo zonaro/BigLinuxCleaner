@@ -1,2 +1,31 @@
 # Diretório de testes temporários (sandbox)
 .testtmp/
+
+# Arquivos de build/cache
+*.tmp
+*.log
+*.cache
+
+# Instalação local (gerada pelo install.sh)
+.local/share/BigLinuxCleaner/
+
+# Ícones gerados
+.local/share/icons/hicolor/*/apps/biglinuxcleaner.png
+.local/share/icons/hicolor/scalable/apps/biglinuxcleaner.svg
+.local/share/icons/steam-games/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Variáveis de ambiente
+.env
+.env.local
+.omo/

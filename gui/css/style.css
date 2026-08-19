@@ -1,0 +1,521 @@
+/* BigLinuxCleaner GUI — Estilos principais */
+/* Paleta: Dark navy + azul/ciano (Big Linux) */
+
+:root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-hover: #21283b;
+    --border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --accent-blue: #2f81f7;
+    --accent-cyan: #39d2c0;
+    --accent-green: #3fb950;
+    --accent-yellow: #d29922;
+    --accent-red: #f85149;
+    --accent-purple: #a371f7;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --radius: 10px;
+    --radius-sm: 6px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Ubuntu, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ─── Header ─── */
+.app-header {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.app-header .logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: contain;
+}
+
+.app-header .title-group {
+    flex: 1;
+}
+
+.app-header h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.app-header .subtitle {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.de-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.78rem;
+    color: var(--accent-cyan);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.de-badge .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* ─── Main Content ─── */
+.app-content {
+    padding: 24px 28px;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+/* ─── Section ─── */
+.section {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-left: 2px;
+}
+
+/* ─── Task Cards ─── */
+.task-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.task-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    user-select: none;
+}
+
+.task-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}
+
+.task-card.selected {
+    border-color: var(--accent-blue);
+    background: rgba(47, 129, 247, 0.08);
+}
+
+.task-card input[type="checkbox"] {
+    display: none;
+}
+
+.task-check {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 5px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    margin-top: 1px;
+}
+
+.task-card.selected .task-check {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.task-card.selected .task-check::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(-45deg) translateY(-1px);
+}
+
+.task-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-info .task-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.task-info .task-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.task-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+/* ─── Action Bar ─── */
+.action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.task-count {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.task-count strong {
+    color: var(--accent-cyan);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    color: white;
+    box-shadow: 0 2px 12px rgba(47, 129, 247, 0.3);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 20px rgba(47, 129, 247, 0.45);
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-secondary {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.btn-select-all {
+    background: transparent;
+    color: var(--accent-blue);
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-select-all:hover {
+    text-decoration: underline;
+}
+
+/* ─── Results Page ─── */
+.results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.results-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    text-align: center;
+}
+
+.stat-card .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-card .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.stat-value.green { color: var(--accent-green); }
+.stat-value.yellow { color: var(--accent-yellow); }
+.stat-value.red { color: var(--accent-red); }
+.stat-value.blue { color: var(--accent-blue); }
+
+/* ─── Log Output ─── */
+.log-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.log-output {
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    max-height: 380px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.log-output .log-info { color: var(--accent-blue); }
+.log-output .log-ok { color: var(--accent-green); }
+.log-output .log-warn { color: var(--accent-yellow); }
+.log-output .log-err { color: var(--accent-red); }
+.log-output .log-separator {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* ─── Task Result Items ─── */
+.result-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.result-task {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.result-task .status-icon {
+    font-size: 1.2rem;
+}
+
+.result-task .task-result-name {
+    flex: 1;
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.result-task .task-result-status {
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.status-ok {
+    background: rgba(63, 185, 80, 0.12);
+    color: var(--accent-green);
+}
+
+.status-skipped {
+    background: rgba(139, 148, 158, 0.12);
+    color: var(--text-secondary);
+}
+
+.status-error {
+    background: rgba(248, 81, 73, 0.12);
+    color: var(--accent-red);
+}
+
+/* ─── Loading Spinner ─── */
+.spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ─── Footer ─── */
+.app-footer {
+    text-align: center;
+    padding: 16px 28px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+}
+
+.app-footer a {
+    color: var(--accent-blue);
+    text-decoration: none;
+}
+
+.app-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ─── Confirm Dialog ─── */
+.confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-overlay.active {
+    display: flex;
+}
+
+.confirm-dialog {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-dialog h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.confirm-dialog p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+    .task-grid {
+        grid-template-columns: 1fr;
+    }
+    .results-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .app-header {
+        flex-wrap: wrap;
+    }
+}

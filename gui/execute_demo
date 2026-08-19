@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# execute_demo — BigBashView launcher para BigLinuxCleaner GUI
+#
+
+GUI_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+BBV=""
+if command -v bigbashview >/dev/null 2>&1; then
+    BBV="bigbashview"
+elif [[ -x /usr/bin/bigbashview ]]; then
+    BBV="/usr/bin/bigbashview"
+elif [[ -x "$HOME/.local/bin/bigbashview" ]]; then
+    BBV="$HOME/.local/bin/bigbashview"
+fi
+
+if [[ -z "$BBV" ]]; then
+    echo "ERRO: BigBashView não encontrado."
+    echo "Instale: sudo pacman -S bigbashview"
+    exit 1
+fi
+
+ICON=""
+if [[ -f "$GUI_DIR/../icon-256.png" ]]; then
+    ICON="$GUI_DIR/../icon-256.png"
+fi
+
+BBV_ARGS=(-s 900x650 -n "BigLinuxCleaner" -c black)
+
+[[ -n "$ICON" ]] && BBV_ARGS+=(-i "$ICON")
+
+exec "$BBV" "${BBV_ARGS[@]}" "content$$GUI_DIR/index.sh.html"
