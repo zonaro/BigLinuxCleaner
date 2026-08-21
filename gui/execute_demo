@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # execute_demo — BigBashView launcher para BigLinuxCleaner GUI
+# Gera HTML em arquivo temporário e abre no BigBashView
 #
 
 GUI_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -25,8 +26,12 @@ if [[ -f "$GUI_DIR/../icon-256.png" ]]; then
     ICON="$GUI_DIR/../icon-256.png"
 fi
 
+# Gera HTML em arquivo temporário
+TMP_HTML="$(mktemp --suffix=.html)"
+bash "$GUI_DIR/index.sh.html" > "$TMP_HTML"
+
 BBV_ARGS=(-d "$GUI_DIR" -s 900x650 -n "BigLinuxCleaner" -c black)
 
 [[ -n "$ICON" ]] && BBV_ARGS+=(-i "$ICON")
 
-exec "$BBV" "${BBV_ARGS[@]}" "content$./index.sh.html"
+exec "$BBV" "${BBV_ARGS[@]}" "$TMP_HTML"
