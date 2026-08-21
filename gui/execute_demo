@@ -25,8 +25,8 @@ if [[ -f "$GUI_DIR/../icon-256.png" ]]; then
     ICON="$GUI_DIR/../icon-256.png"
 fi
 
-BBV_ARGS=(-s 900x650 -n "BigLinuxCleaner" -c black)
+BBV_ARGS=(-d "$GUI_DIR" -s 900x650 -n "BigLinuxCleaner" -c black)
 
 [[ -n "$ICON" ]] && BBV_ARGS+=(-i "$ICON")
 
-exec "$BBV" "${BBV_ARGS[@]}" "content$$GUI_DIR/index.sh.html"
+exec "$BBV" "${BBV_ARGS[@]}" "content$./index.sh.html"

@@ -11,7 +11,7 @@ LIB_DIR="$GUI_DIR/../lib"
 # Carrega bibliotecas
 if [[ -f "$LIB_DIR/detect_de.sh" ]]; then
     source "$LIB_DIR/detect_de.sh"
-    detect_desktop_environment
+    detect_desktop_environment >/dev/null
 fi
 if [[ -f "$LIB_DIR/refresh_de.sh" ]]; then
     source "$LIB_DIR/refresh_de.sh"
@@ -450,7 +450,7 @@ $(echo -e "$LOG_BUFFER")
             <div class=\"task-count\">
                 Processo finalizado
             </div>
-            <a href=\"execute\$$GUI_DIR/index.sh.html\" class=\"btn btn-primary\">
+            <a href=\"execute\$\./index.sh.html\" class=\"btn btn-primary\">
                 <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"15 18 9 12 15 6\"></polyline></svg>
                 Voltar
             </a>
