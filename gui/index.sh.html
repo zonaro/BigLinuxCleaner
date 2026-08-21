@@ -3,6 +3,7 @@
 # index.sh.html — Página principal da GUI BigLinuxCleaner
 # BigBashView executa isto como bash e renderiza o HTML resultante.
 # CSS e JS são inline porque o protocolo content$ não serve arquivos locais.
+# Cores hardcoded (sem variáveis CSS) para compatibilidade com QtWebEngine.
 #
 
 GUI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" && pwd)"
@@ -34,10 +35,37 @@ DISABLED_SNAP=""
 [[ "$HAS_SNAP" == "no" ]] && DISABLED_SNAP="disabled"
 
 ORPHAN_NOTE=""
-[[ "$ORPHAN_COUNT" -gt 0 ]] && ORPHAN_NOTE=" <strong style=\"color:var(--accent-yellow)\">(${ORPHAN_COUNT} encontrados)</strong>"
+[[ "$ORPHAN_COUNT" -gt 0 ]] && ORPHAN_NOTE=" <strong style=\"color:#d29922\">(${ORPHAN_COUNT} encontrados)</strong>"
 
+# Read CSS and JS files
 CSS=$(cat "$GUI_DIR/css/style.css")
 JS=$(cat "$GUI_DIR/js/app.js")
+
+# Replace CSS variables with hardcoded values for QtWebEngine compatibility
+CSS="${CSS//var\(--bg-primary\)/#0d1117}"
+CSS="${CSS//var\(--bg-secondary\)/#161b22}"
+CSS="${CSS//var\(--bg-card\)/#1c2333}"
+CSS="${CSS//var\(--bg-hover\)/#21283b}"
+CSS="${CSS//var\(--border\)/#30363d}"
+CSS="${CSS//var\(--text-primary\)/#e6edf3}"
+CSS="${CSS//var\(--text-secondary\)/#8b949e}"
+CSS="${CSS//var\(--text-muted\)/#6e7681}"
+CSS="${CSS//var\(--accent-blue\)/#2f81f7}"
+CSS="${CSS//var\(--accent-cyan\)/#39d2c0}"
+CSS="${CSS//var\(--accent-green\)/#3fb950}"
+CSS="${CSS//var\(--accent-yellow\)/#d29922}"
+CSS="${CSS//var\(--accent-red\)/#f85149}"
+CSS="${CSS//var\(--accent-purple\)/#a371f7}"
+CSS="${CSS//var\(--shadow\)/0 2px 8px rgba(0, 0, 0, 0.3)}"
+CSS="${CSS//var\(--radius\)/10px}"
+CSS="${CSS//var\(--radius-sm\)/6px}"
+
+# Fix task-grid to use flexbox instead of grid for better QtWebEngine support
+CSS="${CSS/display: grid;/display: flex; flex-wrap: wrap;}"
+CSS="${CSS/grid-template-columns: 1fr 1fr;/}"
+
+# Remove :root block since variables are no longer used
+CSS="${CSS/:root {[^}]*}/}"
 
 cat <<'HTMLEND'
 <!DOCTYPE html>
