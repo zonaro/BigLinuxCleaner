@@ -391,83 +391,229 @@ COMPLETED_TASKS=0
 [[ "${p_task_cache:-}" == "1" ]]          && ((TOTAL_TASKS++)) && ((COMPLETED_TASKS++))
 [[ "${p_task_refresh:-}" == "1" ]]        && ((TOTAL_TASKS++)) && ((COMPLETED_TASKS++))
 
-echo "
+LOG_HTML="$(echo -e "$LOG_BUFFER")"
+DE_DISPLAY="${BLC_DE:-kde}"
+DE_DISPLAY="${DE_DISPLAY^^}"
+
+cat << RESULTHTML
 <!DOCTYPE html>
-<html lang=\"pt-BR\">
+<html lang="pt-BR">
 <head>
-    <meta charset=\"UTF-8\">
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <title>BigLinuxCleaner — Resultados</title>
-    <link rel=\"stylesheet\" href=\"css/style.css\">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BigLinuxCleaner — Resultados</title>
+<style>
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2333;
+  --bg-hover: #21283b;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent-blue: #2f81f7;
+  --accent-cyan: #06b6d4;
+  --accent-green: #3fb950;
+  --accent-red: #f85149;
+  --accent-yellow: #d29922;
+  --radius: 10px;
+  --transition: all 0.2s ease;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 32px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+.app-header .logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+.app-header .title-group h1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.app-header .subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.de-badge {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(63,185,80,0.15);
+  color: var(--accent-green);
+  font-size: 12px;
+  font-weight: 600;
+}
+.app-content {
+  flex: 1;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.results-summary {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.stat-card {
+  flex: 1;
+  min-width: 120px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-value.blue { color: var(--accent-blue); }
+.stat-value.green { color: var(--accent-green); }
+.stat-value.yellow { color: var(--accent-yellow); }
+.stat-value.red { color: var(--accent-red); }
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.log-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 200px;
+}
+.log-header {
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 14px;
+}
+.log-output {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.log-ok { color: var(--accent-green); }
+.log-info { color: var(--accent-cyan); }
+.log-warn { color: var(--accent-yellow); }
+.log-err { color: var(--accent-red); }
+.log-dim { color: var(--text-muted); }
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--border);
+}
+.task-count {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  color: #fff;
+}
+.btn-primary:hover { opacity: 0.9; }
+.app-footer {
+  padding: 16px 32px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+.app-footer a { color: var(--text-secondary); text-decoration: none; }
+</style>
 </head>
 <body>
-
-    <!-- Header -->
-    <header class=\"app-header\">
-        <img class=\"logo\" src=\"$GUI_DIR/../icon-256.png\" alt=\"BigLinuxCleaner\"
-             onerror=\"this.style.display='none'\">
-        <div class=\"title-group\">
-            <h1>BigLinuxCleaner</h1>
-            <div class=\"subtitle\">Limpeza concluída</div>
-        </div>
-    </header>
-
-    <!-- Results -->
-    <main class=\"app-content\">
-
-        <!-- Summary Stats -->
-        <div class=\"results-summary\">
-            <div class=\"stat-card\">
-                <div class=\"stat-value blue\">$TOTAL_TASKS</div>
-                <div class=\"stat-label\">Tarefas</div>
-            </div>
-            <div class=\"stat-card\">
-                <div class=\"stat-value green\">$ORPHANS_REMOVED</div>
-                <div class=\"stat-label\">Órfãos</div>
-            </div>
-            <div class=\"stat-card\">
-                <div class=\"stat-value yellow\">$REMOVED</div>
-                <div class=\"stat-label\">Atalhos</div>
-            </div>
-            <div class=\"stat-card\">
-                <div class=\"stat-value green\">$STEAM_FIXED</div>
-                <div class=\"stat-label\">Steam</div>
-            </div>
-        </div>
-
-        <!-- Log Output -->
-        <div class=\"log-container\">
-            <div class=\"log-header\">
-                <span>Log de execução</span>
-            </div>
-            <div class=\"log-output\" id=\"log-output\">
-$(echo -e "$LOG_BUFFER")
-            </div>
-        </div>
-
-        <!-- Back Button -->
-        <div class=\"action-bar\">
-            <div class=\"task-count\">
-                Processo finalizado
-            </div>
-            <a href=\"execute\$\./index.sh.html\" class=\"btn btn-primary\">
-                <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"15 18 9 12 15 6\"></polyline></svg>
-                Voltar
-            </a>
-        </div>
-
-    </main>
-
-    <footer class=\"app-footer\">
-        BigLinuxCleaner v2.0 · <a href=\"https://github.com/zonaro/BigLinuxCleaner\" target=\"_blank\">GitHub</a> ·
-        Big Linux / BigCommunity
-    </footer>
-
-    <script>
-        // Auto-scroll log to bottom
-        var log = document.getElementById('log-output');
-        if (log) log.scrollTop = log.scrollHeight;
-    </script>
+<header class="app-header">
+  <div class="title-group">
+    <h1>BigLinuxCleaner</h1>
+    <div class="subtitle">Limpeza concluida</div>
+  </div>
+  <span class="de-badge">DE: ${DE_DISPLAY}</span>
+</header>
+<main class="app-content">
+  <div class="results-summary">
+    <div class="stat-card">
+      <div class="stat-value blue">$TOTAL_TASKS</div>
+      <div class="stat-label">Tarefas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value green">$ORPHANS_REMOVED</div>
+      <div class="stat-label">Orfaos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value yellow">$REMOVED</div>
+      <div class="stat-label">Atalhos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value green">$STEAM_FIXED</div>
+      <div class="stat-label">Steam</div>
+    </div>
+  </div>
+  <div class="log-container">
+    <div class="log-header"><span>Log de execucao</span></div>
+    <div class="log-output" id="log-output">${LOG_HTML}</div>
+  </div>
+  <div class="action-bar">
+    <div class="task-count">Processo finalizado</div>
+    <a href="execute\$./index.sh.html" class="btn btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Voltar
+    </a>
+  </div>
+</main>
+<footer class="app-footer">
+  BigLinuxCleaner v2.0 &middot; <a href="https://github.com/zonaro/BigLinuxCleaner" target="_blank">GitHub</a> &middot;
+  Big Linux / BigCommunity
+</footer>
+<script>
+var log = document.getElementById('log-output');
+if (log) log.scrollTop = log.scrollHeight;
+</script>
 </body>
 </html>
-"
+RESULTHTML
