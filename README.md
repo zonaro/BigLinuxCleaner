@@ -17,29 +17,29 @@ Script Bash para limpeza e manutenção do **Big Linux** e **BigCommunity** (sis
  
  ---
 
-Execute o script diretamente no terminal sem precisar clonar o repositório:
+## Instalação
+
+Execute o instalador diretamente do GitHub, sem clonar o repositório:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash
-```
-
-> **Atenção:** sempre inspecione scripts antes de executá-los com privilégios. Você pode visualizar o conteúdo completo em [`cleaner.sh`](./cleaner.sh).
-
-## Instalação como atalho (.desktop)
-
-Crie um atalho no seu ambiente (área de trabalho e/ou menu de aplicativos) que executa o `cleaner.sh` direto do GitHub — sem precisar clonar o repositório. O instalador **detecta terminais disponíveis no sistema**, lista as opções e **pergunta qual usar** (com sugestão nativa do seu DE: Konsole no KDE, GNOME Terminal no GNOME/Cinnamon, XFCE Terminal no XFCE, etc.). O atalho abre no terminal escolhido, roda a limpeza e fica aberto até você pressionar Enter.
-
-```bash
-# A partir do repositório clonado
-./install.sh
-
-# Ou diretamente do GitHub
 curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash
 ```
 
-O instalador pergunta onde você quer o atalho (**Área de trabalho**, **Menu de aplicativos** ou **ambos**), qual terminal usar, instala o ícone oficial (PNG em múltiplos tamanhos: 256/128/64 px) e atualiza o menu do seu Desktop Environment automaticamente.
+> **Atenção:** sempre inspecione scripts antes de executá-los com privilégios. Você pode visualizar o conteúdo completo em [`install.sh`](./install.sh) e [`cleaner.sh`](./cleaner.sh).
 
-Para remover o atalho, o ícone e o script local (também direto do GitHub):
+### App gráfico (padrão)
+
+A instalação padrão cria um atalho (**Área de trabalho**, **Menu de aplicativos** ou ambos) que abre o **app gráfico do BigLinuxCleaner** — uma interface BigBashView nativa do Big Linux, sem depender de navegador:
+
+- **Seleção de tarefas**: escolha exatamente o que limpar antes de executar;
+- **Progresso ao vivo**: barra de progresso, contadores e estatísticas atualizados em tempo real durante a limpeza;
+- **Log de execução**: saída detalhada exibida linha a linha enquanto o script roda;
+- **Ícone oficial** instalado em múltiplos tamanhos (256/128/64 px);
+- **Menu atualizado automaticamente** ao final da instalação.
+
+O instalador pergunta onde você quer o atalho e instala tudo em `~/.local/share/BigLinuxCleaner/`. O app gráfico requer o **BigBashView** (`bigbashview`), presente por padrão no Big Linux; em outros sistemas o atalho abre automaticamente a versão de terminal.
+
+Para remover tudo (atalhos, ícone, GUI e script local):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install.sh | bash -s -- --uninstall
@@ -54,21 +54,26 @@ curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/install
 # Instala apenas na área de trabalho
 ./install.sh --desktop
 
-# Define terminal específico
+# Define terminal específico (usado pelo modo CLI do atalho)
 ./install.sh --terminal=gnome-terminal
 
 # Modo silencioso (usa padrões: ambos + terminal preferido do DE)
 ./install.sh --yes
 ```
 
-## Uso manual
+## Uso pelo terminal (alternativo)
+
+Se preferir não instalar nada, execute a limpeza direto no terminal sem clonar o repositório:
 
 ```bash
-# Clone o repositório
+curl -fsSL https://raw.githubusercontent.com/zonaro/BigLinuxCleaner/main/cleaner.sh | bash
+```
+
+Ou manualmente a partir do código-fonte:
+
+```bash
 git clone https://github.com/zonaro/BigLinuxCleaner.git
 cd BigLinuxCleaner
-
-# Torne o script executável e execute
 chmod +x cleaner.sh
 ./cleaner.sh
 ```
@@ -81,6 +86,7 @@ chmod +x cleaner.sh
 | `pacman`                  | ✅           | Limpeza de órfãos (Arch/BigLinux)          |
 | `sudo`                    | ✅           | Remoção de arquivos em `/usr` e `/var`     |
 | `curl`                    | ✅           | Download de ícones da Steam                |
+| `bigbashview`             | ⬜           | App gráfico (padrão no Big Linux)          |
 | `flatpak`                 | ⬜           | Ignorado se não encontrado                 |
 | `snap`                    | ⬜           | Ignorado se não encontrado                 |
 | `kbuildsycoca5`/`6`       | ⬜           | Atualização do KDE (ignorado se ausente)   |
@@ -108,8 +114,11 @@ BigLinuxCleaner/
 │   ├── refresh_de.sh     # Refresh universal de menu/cache por DE
 │   └── terminals.sh      # Detecção/listagem de terminais
 ├── cleaner.sh            # Script principal (orquestra as libs)
-├── install.sh            # Instalador universal multi-DE
-├── gui/                  # GUI em BashView (futuro)
+├── install.sh            # Instalador universal multi-DE (GUI + CLI)
+├── gui/                  # App gráfico BigBashView (progresso ao vivo)
+│   ├── index.sh.html     # Tela principal (seleção de tarefas)
+│   ├── run_cleanup.sh    # Backend: sessão, worker e página de progresso
+│   └── tail_log.sh.html  # Endpoint incremental do log de execução
 ├── docs/                 # Site estático (multi-idioma)
 ├── AGENTS.md             # Regras do projeto
 ├── .agents/              # Configuração dos agentes
