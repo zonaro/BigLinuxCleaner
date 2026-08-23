@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# tail_log.sh.html — Endpoint que retorna linhas de log a partir de N+1.
+# Usado pela pagina de progresso para exibir o log incrementalmente.
+# O BBV passa os query params como variaveis de ambiente ($session, $from),
+# com fallback para argumentos de linha de comando ($1/$2).
+#
+
+set -Eeuo pipefail
+
+BASE="$HOME/.cache/biglinuxcleaner"
+
+# Le de env (BBV) com fallback para CLI
+session="${session:-${1:-}}"
+from="${from:-${2:-0}}"
+
+# Validacao estrita: rejeita qualquer coisa fora do esperado
+[[ "$session" =~ ^session-[A-Za-z0-9_-]+$ ]] || exit 0
+if ! [[ "$from" =~ ^[0-9]+$ ]]; then
+    from=0
+fi
+
+logfile="$BASE/$session/log.txt"
+[[ -f "$logfile" ]] || exit 0
+
+# Linhas de (from+1) em diante. from=0 => todas as linhas.
+sed -n "$((from + 1)),\$p" "$logfile" 2>/dev/null || true

@@ -243,7 +243,7 @@ install_gui() {
     if command -v curl >/dev/null 2>&1; then
         log_warn "Diretório gui/ não encontrado localmente — tentando download via GitHub..."
         local base_url="$RAW_BASE/gui"
-        local files=("execute_demo" "biglinuxcleaner-gui.sh" "run_cleanup.sh" "index.sh.html" "css/style.css" "js/app.js")
+        local files=("execute_demo" "biglinuxcleaner-gui.sh" "run_cleanup.sh" "tail_log.sh.html" "index.sh.html" "css/style.css" "js/app.js")
         local subdirs=("css" "js" "locale")
 
         for subdir in "${subdirs[@]}"; do
