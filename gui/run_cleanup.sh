@@ -520,7 +520,7 @@ print_fatal_page() {
 <body style="background:#0d1117;color:#e6edf3;font-family:sans-serif;padding:40px;">
 <h1>Erro ao iniciar a limpeza</h1>
 <p>Não foi possível criar o diretório de sessão. Verifique o espaço em disco e as permissões de ~/.cache.</p>
-<a href="execute$./index.sh.html" style="color:#2f81f7;">Voltar</a>
+<a href="/execute$./index.sh.html" style="color:#2f81f7;">Voltar</a>
 </body>
 </html>
 HTML
@@ -749,7 +749,7 @@ body {
   </div>
   <div class="action-bar">
     <div class="task-count" id="action-text">Executando...</div>
-    <a href="execute$./index.sh.html" class="btn">
+    <a href="/execute$./index.sh.html" class="btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
       Voltar
     </a>
@@ -764,7 +764,7 @@ body {
   var sid = "__SID__";
   var statusUrl = "/api/file?filename=" + encodeURIComponent(
     "$HOME/.cache/biglinuxcleaner/" + sid + "/status.json");
-  var logUrlBase = "execute$./tail_log.sh.html?session=" + encodeURIComponent(sid) + "&from=";
+  var logUrlBase = "/execute$./tail_log.sh.html?session=" + encodeURIComponent(sid) + "&from=";
   var renderedLines = 0;
   var running = true;
   var inFlight = false;

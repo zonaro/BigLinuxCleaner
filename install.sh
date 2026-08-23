@@ -235,7 +235,10 @@ install_gui() {
 
     if [[ -d "$gui_src" ]]; then
         cp -r "$gui_src"/* "$LOCAL_GUI_DIR/"
-        chmod +x "$LOCAL_GUI_DIR/execute_demo" "$LOCAL_GUI_DIR/biglinuxcleaner-gui.sh" "$LOCAL_GUI_DIR/run_cleanup.sh" 2>/dev/null || true
+        # +x em TODOS os scripts executados pelo BigBashView (inclui *.sh.html)
+        chmod +x "$LOCAL_GUI_DIR/execute_demo" "$LOCAL_GUI_DIR/biglinuxcleaner-gui.sh" \
+            "$LOCAL_GUI_DIR/run_cleanup.sh" "$LOCAL_GUI_DIR/index.sh.html" \
+            "$LOCAL_GUI_DIR/tail_log.sh.html" 2>/dev/null || true
         log_ok "GUI instalada em $LOCAL_GUI_DIR"
         return 0
     fi
@@ -264,7 +267,10 @@ install_gui() {
         fi
 
         if [[ -f "$LOCAL_GUI_DIR/execute_demo" ]]; then
-            chmod +x "$LOCAL_GUI_DIR/execute_demo" "$LOCAL_GUI_DIR/biglinuxcleaner-gui.sh" "$LOCAL_GUI_DIR/run_cleanup.sh" 2>/dev/null || true
+            # +x em TODOS os scripts executados pelo BigBashView (inclui *.sh.html)
+            chmod +x "$LOCAL_GUI_DIR/execute_demo" "$LOCAL_GUI_DIR/biglinuxcleaner-gui.sh" \
+                "$LOCAL_GUI_DIR/run_cleanup.sh" "$LOCAL_GUI_DIR/index.sh.html" \
+                "$LOCAL_GUI_DIR/tail_log.sh.html" 2>/dev/null || true
             log_ok "GUI baixada via GitHub."
             return 0
         fi

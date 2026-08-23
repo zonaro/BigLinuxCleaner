@@ -1,7 +1,13 @@
 #!/bin/bash
 #
 # execute_demo — BigBashView launcher para BigLinuxCleaner GUI
-# Gera HTML em arquivo temporário e abre no BigBashView
+#
+# Abre "execute$./index.sh.html" a partir da RAIZ do docroot (-d GUI_DIR).
+# Isso é obrigatório: os links relativos "execute$..." das páginas só
+# funcionam quando a página atual é servida pela raiz do docroot. Se a
+# página inicial for aberta de fora (ex.: arquivo temporário em /tmp),
+# os botões resolvem para caminhos errados e o BBV devolve uma resposta
+# vazia — que aparece como tela preta (cor de fundo -c black).
 #
 
 GUI_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -26,12 +32,13 @@ if [[ -f "$GUI_DIR/../icon-256.png" ]]; then
     ICON="$GUI_DIR/../icon-256.png"
 fi
 
-# Gera HTML em arquivo temporário
-TMP_HTML="$(mktemp --suffix=.html)"
-bash "$GUI_DIR/index.sh.html" > "$TMP_HTML"
+# Garante permissão de execução: o BBV executa estes arquivos como scripts.
+# Sem o bit +x, a execução falha com "Permission denied" e a janela fica preta.
+chmod +x "$GUI_DIR/index.sh.html" "$GUI_DIR/tail_log.sh.html" \
+    "$GUI_DIR/run_cleanup.sh" 2>/dev/null || true
 
 BBV_ARGS=(-d "$GUI_DIR" -s 900x650 -n "BigLinuxCleaner" -c black)
 
 [[ -n "$ICON" ]] && BBV_ARGS+=(-i "$ICON")
 
-exec "$BBV" "${BBV_ARGS[@]}" "$TMP_HTML"
+exec "$BBV" "${BBV_ARGS[@]}" "execute\$./index.sh.html"
